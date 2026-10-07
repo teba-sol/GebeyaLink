@@ -1,4 +1,5 @@
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 /**
  * Better Auth core schema (user, session, account, verification).
@@ -6,9 +7,15 @@ import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'dri
  * Field-for-field against Better Auth 1.7.x core definitions
  * (@better-auth/core/dist/db/schema). Do not add business columns here —
  * domain tables live in their own files when those features are built.
+ *
+ * Ids are `text`: Better Auth generates 32-char hex ids, not RFC UUIDs.
+ * The default generates a UUID when the client omits the id.
  */
 
-const id = () => uuid('id').defaultRandom().primaryKey();
+const id = () =>
+  text('id')
+    .default(sql`gen_random_uuid()`)
+    .primaryKey();
 const createdAt = () => timestamp('createdAt', { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () => timestamp('updatedAt', { withTimezone: true }).notNull().defaultNow();
 
@@ -17,7 +24,7 @@ export const user = pgTable(
   {
     id: id(),
     name: text('name').notNull(),
-    email: text('email').notNull().unique(),
+    email: text('email').notNull(),
     emailVerified: boolean('emailVerified').notNull().default(false),
     image: text('image'),
     createdAt: createdAt(),
@@ -30,11 +37,11 @@ export const session = pgTable(
   'session',
   {
     id: id(),
-    userId: uuid('userId')
+    userId: text('userId')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     expiresAt: timestamp('expiresAt', { withTimezone: true }).notNull(),
-    token: text('token').notNull().unique(),
+    token: text('token').notNull(),
     ipAddress: text('ipAddress'),
     userAgent: text('userAgent'),
     createdAt: createdAt(),
@@ -50,7 +57,7 @@ export const account = pgTable(
   'account',
   {
     id: id(),
-    userId: uuid('userId')
+    userId: text('userId')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     providerId: text('providerId').notNull(),

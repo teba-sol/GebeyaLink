@@ -278,6 +278,12 @@ Avoid introducing a second ORM.
 
 Supabase note: the project does not provide a second "shadow" database, so migrations are generated as SQL artifacts and applied directly. Application code always connects with the standard PostgreSQL connection string (session pooler).
 
+Migration workflow (C1 confirmed): use `drizzle-kit generate` (`npm run db:generate -w web`) to produce versioned SQL under `server/db/migrations`, then apply the generated SQL to the pooler manually — execute each `--> statement-breakpoint` statement in the file with a `pg` client (`apps/web`'s `DATABASE_URL` in `apps/web/.env`). Avoid `drizzle-kit push`: on this project it deterministically re-proposes the existing auth unique indexes (`user_email_unique`, `session_token_unique`) and aborts with `relation ... already exists` every run, so statements after the failure point are never applied. Never edit a committed migration retroactively — add a new one instead.
+
+Auth ids: Better Auth generates 32-char hex ids, so auth id/FK columns are `text` (not `uuid`). The `id` default is `gen_random_uuid()`. Domain tables use `uuid` ids and snake_case columns (see `server/db/schema/*.ts`).
+
+Better Auth is configured with `emailAndPassword: { enabled: true, requireEmailVerification: false }` plus the `bearer()` and `nextCookies()` plugins. Sign-up/sign-in via email+password is therefore enabled.
+
 ---
 
 # 9. Authentication
