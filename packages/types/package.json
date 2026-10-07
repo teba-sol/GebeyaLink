@@ -1,0 +1,12 @@
+{
+  "name": "@gebeyalink/types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Genuinely shared TypeScript types",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  }
+}

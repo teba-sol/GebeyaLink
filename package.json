@@ -1,0 +1,37 @@
+{
+  "name": "gebeyalink",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GebeyaLink — managed agricultural marketplace monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "web": "npm run dev --workspace apps/web",
+    "mobile": "npm run dev --workspace apps/mobile",
+    "db:push": "npm run db:push --workspace apps/web",
+    "db:generate": "npm run db:generate --workspace apps/web"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "eslint": "^9",
+    "next": "16.3.8",
+    "prettier": "^3.4.2",
+    "react-dom": "19.2.3",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8"
+  },
+  "packageManager": "npm@11.16.0"
+}
