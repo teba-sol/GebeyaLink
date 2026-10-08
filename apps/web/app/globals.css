@@ -1,40 +1,122 @@
+@import 'tailwindcss';
+
+/*
+ * GebeyaLink design system — tokens locked (docs/frontend-architecture.md §2).
+ * Direction: Terra Market — modern/approachable B2B agricultural commerce.
+ *   Display: Bricolage Grotesque · Body: Plus Jakarta Sans · Numerals: IBM Plex Mono
+ *   Palette: cream paper, leaf green, sun ochre · Soft radii, marketplace density
+ *
+ * Semantic tokens: utilities reference them live (`@theme inline`), so retuning
+ * a token restyles every screen. Status colors follow the inventory/order
+ * lifecycle — status is always shape + label + color, never color alone.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Typography */
+  --f-display: var(--font-bricolage);
+  --f-body: var(--font-jakarta);
+  --f-num: var(--font-plex-mono);
+
+  /* Surfaces & ink */
+  --paper: #faf5ea;
+  --surface: #fffdfa;
+  --surface-2: #f3ead7;
+  --ink: #23231c;
+  --ink-soft: #6d6a5c;
+  --ink-faint: #9b978a;
+  --line: #eadfcc;
+  --line-strong: #d9ccb2;
+
+  /* Brand & attention */
+  --accent: #2c8a4c;
+  --accent-soft: #e2f3e4;
+  --attention: #d99a1f;
+  --attention-soft: #fbf0d4;
+  --danger: #cc4b32;
+  --danger-soft: #fbe7e0;
+
+  /* Inventory lifecycle */
+  --st-available: #2c8a4c;
+  --st-reserved: #d99a1f;
+  --st-committed: #3b74b8;
+  --st-dispatched: #8455c9;
+  --st-sold: #6d6a5c;
+
+  /* Order lifecycle */
+  --st-pending: #d99a1f;
+  --st-accepted: #2c8a4c;
+  --st-confirmed: #2c8a4c;
+  --st-rejected: #cc4b32;
+  --st-expired: #a06a5c;
+  --st-cancelled: #6d6a5c;
+  --st-failed: #cc4b32;
+
+  /* Shape & composition */
+  --r-card: 14px;
+  --r-pill: 999px;
+  --r-btn: 10px;
+  --sh-card:
+    0 1px 2px rgba(35, 30, 20, 0.06), 0 8px 24px -12px rgba(35, 30, 20, 0.12);
+  --container-page: 80rem;
+  --gap-section: 3rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-attention: var(--attention);
+  --color-attention-soft: var(--attention-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --color-st-available: var(--st-available);
+  --color-st-reserved: var(--st-reserved);
+  --color-st-committed: var(--st-committed);
+  --color-st-dispatched: var(--st-dispatched);
+  --color-st-sold: var(--st-sold);
+  --color-st-pending: var(--st-pending);
+  --color-st-accepted: var(--st-accepted);
+  --color-st-confirmed: var(--st-confirmed);
+  --color-st-rejected: var(--st-rejected);
+  --color-st-expired: var(--st-expired);
+  --color-st-cancelled: var(--st-cancelled);
+  --color-st-failed: var(--st-failed);
+
+  --font-sans: var(--f-body);
+  --font-display: var(--f-display);
+  --font-mono: var(--f-num);
+
+  --radius-card: var(--r-card);
+  --radius-pill: var(--r-pill);
+  --radius-btn: var(--r-btn);
+  --shadow-card: var(--sh-card);
 }
 
 html {
   height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
+}
+
+body {
+  min-height: 100%;
   margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -42,8 +124,350 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------------------
+ * System primitives — direction-neutral structure, Terra Market presentation.
+ * ---------------------------------------------------------------------------
+ */
+
+/* Map every domain status to its semantic color token. */
+[data-status='available'] { --status-color: var(--st-available); }
+[data-status='reserved'] { --status-color: var(--st-reserved); }
+[data-status='committed'] { --status-color: var(--st-committed); }
+[data-status='dispatched'] { --status-color: var(--st-dispatched); }
+[data-status='sold'] { --status-color: var(--st-sold); }
+[data-status='pending'] { --status-color: var(--st-pending); }
+[data-status='accepted'] { --status-color: var(--st-accepted); }
+[data-status='confirmed'] { --status-color: var(--st-confirmed); }
+[data-status='rejected'] { --status-color: var(--st-rejected); }
+[data-status='expired'] { --status-color: var(--st-expired); }
+[data-status='cancelled'] { --status-color: var(--st-cancelled); }
+[data-status='failed'] { --status-color: var(--st-failed); }
+
+/* Status mark: soft filled pill — shape + label + color (never color alone). */
+.status-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--status-color);
+  background: color-mix(in srgb, var(--status-color) 14%, transparent);
+  border-radius: var(--r-pill);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-mark__swatch {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--status-color);
+}
+
+/* Availability meter: stacked lifecycle bar + legend. */
+.meter__track {
+  display: flex;
+  width: 100%;
+  height: 0.625rem;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.meter__seg {
+  display: block;
+  height: 100%;
+  background: var(--status-color);
+}
+
+.meter__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Order journey: stacked step cards on a timeline rail — not a status table. */
+.journey {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journey::before {
+  content: '';
+  position: absolute;
+  left: 0.6875rem;
+  top: 1rem;
+  bottom: 1rem;
+  width: 1px;
+  background: var(--line);
+}
+
+.journey__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  padding: 1rem 1.25rem;
+}
+
+.journey__marker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex: none;
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-faint);
+  font-family: var(--f-num);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.journey__step[data-state='done'] .journey__marker {
+  background: var(--st-accepted);
+  border-color: var(--st-accepted);
+  color: #fff;
+}
+
+.journey__step[data-state='current'] .journey__marker {
+  border-color: var(--st-pending);
+  background: var(--surface);
+  color: var(--st-pending);
+  box-shadow: 0 0 0 3px var(--attention-soft);
+}
+
+.journey__step[data-state='error'] .journey__marker {
+  border-color: var(--st-rejected);
+  background: var(--st-rejected);
+  color: #fff;
+}
+
+.journey__step[data-state='error'] {
+  --status-color: var(--st-rejected);
+}
+
+.journey__label {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.journey__step[data-state='todo'] .journey__label {
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+.journey__desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.journey__time {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: var(--f-num);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+
+/* Deadline urgency */
+.countdown[data-urgency='soon'] {
+  border-color: var(--attention);
+}
+
+.countdown[data-urgency='soon'] .countdown__value {
+  color: var(--attention);
+}
+
+.countdown[data-urgency='critical'] {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.countdown[data-urgency='critical'] .countdown__value {
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------------------------------
+ * Layout scaffolding — shared by reference compositions and real screens.
+ * ---------------------------------------------------------------------------
+ */
+
+.ds-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.ds-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 1rem;
+}
+
+.ds-section__index {
+  font-family: var(--f-num);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.ds-section__title {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+
+.ds-section__intent {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.ds-search {
+  width: 100%;
+  height: 3rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-btn);
+  background: var(--surface);
+  padding: 0 1rem;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+
+.ds-search::placeholder {
+  color: var(--ink-faint);
+}
+
+.ds-search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Marketplace hero: soft accent band, asymmetric type hierarchy. */
+.ds-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: var(--accent-soft);
+  border-radius: var(--r-card);
+  padding: 2.5rem 2rem;
+}
+
+.ds-hero h1 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ds-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ds-stats__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--r-card);
+  padding: 0.625rem 0.875rem;
+}
+
+.ds-stats__row dt {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.ds-stats__row dd {
+  margin: 0;
+  font-family: var(--f-num);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Listing grid: marketplace density (2 → 4 columns). */
+.listing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+@media (min-width: 1024px) {
+  .listing-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Dense operational table. */
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ops-table th {
+  text-align: left;
+  font-family: var(--f-num);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--line-strong);
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+}
+
+.ops-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.ops-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ops-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
 }

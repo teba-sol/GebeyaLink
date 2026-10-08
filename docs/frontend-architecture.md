@@ -1,6 +1,7 @@
 # GebeyaLink Frontend Architecture & Plan
 
-Status: approved plan (read-only until a phase is kicked off). Companion to
+Status: **F0 in progress — direction locked (Terra Market)**. This document is
+the working plan; edit it when a phase changes it. Companion to
 `docs/frontend-design-direction.md`, which is the standing product requirement.
 
 This document records the current state, the technical architecture, the design
@@ -13,16 +14,21 @@ before C6. It exists so no session has to re-derive these decisions.
 
 ### What exists
 
-- The web UI is **greenfield**. `apps/web` has 22 REST route handlers under
-  `app/api/v1/` + better-auth (`app/api/auth/[...all]`), and only the untouched
-  create-next-app template as a page (`app/page.tsx`, `app/page.module.css`).
-- No styling system (no Tailwind, no CSS framework), no component library, no
-  state/data-fetching library, no form/animation libraries. `app/globals.css` is
-  the template's plain CSS.
-- No `features/`, `components/`, or `src/` dirs yet. Domain code lives in
-  `apps/web/server/` (server-only). `packages/ui` (`@gebeyalink/ui`) is an
-  intentional empty stub per `docs/tech-stack.md` §22 — web components belong in
-  `apps/web`, shared ones only in `packages/ui`.
+- The web UI was greenfield; **F0 foundation is built**. `apps/web` has REST
+  route handlers under `app/api/v1/` + better-auth (`app/api/auth/[...all]`).
+- Styling: Tailwind v4 (`@import 'tailwindcss'`) with semantic tokens in
+  `app/globals.css`; fonts via `next/font` (Bricolage Grotesque display, Plus
+  Jakarta Sans body, IBM Plex Mono numerals). No component library — bespoke
+  primitives in `features/ui/` only. No state/data-fetching/form/animation
+  libraries yet.
+- `features/` exists: `features/ui/` (primitives) and `features/design-system/`
+  (reference screens + fixtures). Domain code lives in `apps/web/server/`
+  (server-only). `packages/ui` (`@gebeyalink/ui`) is an intentional empty stub
+  per `docs/tech-stack.md` §22 — web components belong in `apps/web`, shared
+  ones only in `packages/ui`.
+- Role shells are in place: role-gated layouts under `app/(auth)/`, `app/(buyer)/`,
+  `app/(coop)/`, `app/(agent)/`, `app/(admin)/` (session + `user_roles` server-side
+  redirect gates per §Auth). `/design-system` renders the locked token/reference page.
 - Backend coverage (C1–C5) is complete through **payment confirmed**: auth/roles,
   cooperatives, collection centers, farmers, deliveries, inventory lots,
   marketplace listings (search/filter/CRUD), orders (place/accept/reject/expire/
@@ -68,24 +74,24 @@ From the bundled docs in `node_modules/next/dist/docs/` (read them, do not guess
 
 ---
 
-## 2. Visual-language exploration brief (Foundation gate)
+## 2. Visual language — locked direction (F0 decision)
 
-The Foundation phase (F0) produces **2–3 candidate directions**, each rendered on
-the same prototype screens (a private `/prototype` route), compared on this matrix:
+Three candidate directions were built on identical screens under a comparison
+route and reviewed:
 
-| Axis | Question |
-|---|---|
-| Typography | professional B2B vs. more modern/approachable |
-| Palette | agricultural green/earth tones **without** looking like a generic farming app |
-| Composition | marketplace density vs. spacious intelligence/supply-chain feel |
-| Status language | clear colors + labels (and shapes) for Available, Reserved, Committed, Dispatched, Completed, etc. |
-| Quantity language | kg/tonne emphasis, inventory availability, minimum order, progress indicators |
-| Cards/tables | alternatives that avoid generic SaaS dashboard patterns |
-| Mobile/touch | especially for the Collection Agent workflow |
-| Order journey | timeline/progress visualization rather than tables |
+- **Field Ledger** — spare, publishing-like B2B intelligence (ledger sheets).
+- **Terra Market** — warm cream paper, leaf-green accent, ochre attention,
+  Bricolage Grotesque display + Plus Jakarta Sans body, marketplace density,
+  soft radii/cards.
+- **Trade Atlas** — editorial intelligence, cobalt + ochre.
 
-**Decision rule: the direction is chosen once; it becomes the GebeyaLink design
-system** for every subsequent phase. No re-litigating per screen.
+**Chosen once: Terra Market. It is the GebeyaLink design system** for every
+subsequent phase; the losing directions were deleted. Tokens live in
+`apps/web/app/globals.css` (type, palette, status/semantic colors, shape,
+elevation, responsive). The locked reference (tokens + primitives + five
+fixture compositions: specimen, marketplace, listing, order journey, inventory
+ops, collection agent) renders at **`/design-system`**, every composition
+labeled *reference — not live data*. No re-litigating per screen.
 
 ---
 
@@ -151,7 +157,7 @@ apps/web/
     (coop)/ops, inventory, orders, ...  cooperative shell
     (agent)/...                         touch shell
     (admin)/...                         oversight shell
-    _prototype/                         F0 comparison screens (private)
+    design-system/                      locked token + reference screens
     api/...                             existing route handlers (unchanged)
   features/
     ui/                                 design system (tokens usage, primitives)
@@ -215,7 +221,7 @@ component-library look.
 
 | Phase | Scope | Gate |
 |---|---|---|
-| **F0 Foundation** | Tokens, primitives, role shells, 2–3 directions on `/prototype` screens per §2 matrix | **Direction picked once → design system locked** |
+| **F0 Foundation** | Tokens, primitives, role shells, Terra Market locked on `/design-system` reference (§2) | **Direction picked once → design system locked** |
 | **F1 Buyer journey** | sign-in/up → marketplace browse/search/filter → commodity listing surface + availability viz → quantity/MOQ order creation → order journey timeline → payment attempt + status | Review stop; Playwright e2e for the journey |
 | **F2 Cooperative ops** | inventory availability surfaces, listings management, incoming-orders board with 24h countdowns, accept/reject (reason dialog), payment confirm/fail, centers/farmers basics | Review stop |
 | **F3 Collection agent (touch web)** | center select → farmer search/create → delivery capture stepper (claimed/measured/accepted/rejected + grade) → history | Review stop; touch/responsive QA |

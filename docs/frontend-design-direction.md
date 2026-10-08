@@ -3,6 +3,13 @@
 This is a standing product requirement. It applies to every frontend change in this
 repository. Read it before implementing any UI.
 
+> **Design system locked (F0): Terra Market.** Warm cream paper, leaf-green
+> accent, ochre attention, Bricolage Grotesque display + Plus Jakarta Sans body +
+> IBM Plex Mono numerals, soft radii/cards, marketplace density, order journey as
+> timeline. Tokens live in `apps/web/app/globals.css`; the reference renders at
+> `/design-system` (fixture data, labeled "reference — not live data"). Everything
+> below still applies on top of that system.
+
 ## GebeyaLink must NOT use a generic SaaS/admin-dashboard visual pattern
 
 Do not design every screen as:
