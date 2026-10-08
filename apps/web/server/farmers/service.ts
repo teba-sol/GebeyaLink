@@ -110,6 +110,9 @@ export async function listFarmers(
     if (ids.length === 0) {
       return { items: [], page, limit, total: 0 };
     }
+    if (query.cooperativeId && !ids.includes(query.cooperativeId)) {
+      return { items: [], page, limit, total: 0 };
+    }
     scopeWhere = query.cooperativeId
       ? and(notDeleted, eq(farmers.cooperativeId, query.cooperativeId))
       : and(notDeleted, inArray(farmers.cooperativeId, ids));

@@ -15,6 +15,27 @@
       "when": 1791408405389,
       "tag": "0001_nasty_chimera",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791442799031,
+      "tag": "0002_confused_shatterstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791468473900,
+      "tag": "0003_regular_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791472423389,
+      "tag": "0004_blushing_robbie_robertson",
+      "breakpoints": true
     }
   ]
 }

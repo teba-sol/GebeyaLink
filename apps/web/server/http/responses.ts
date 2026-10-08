@@ -5,6 +5,7 @@ import type { ApiFailure } from '@gebeyalink/types';
 import { AuthzError } from '../authz/guards';
 import { ConflictError } from '../cooperatives/service';
 import { zodErrorMessages } from '../validation/zod';
+import { BusinessRuleError } from './errors';
 
 export function failureResponse(status: number, code: string, message: string): Response {
   const body: ApiFailure = { error: { code, message } };
@@ -29,6 +30,9 @@ export function fromServiceError(error: unknown): Response | null {
   }
   if (error instanceof ConflictError) {
     return failureResponse(409, 'conflict', error.message);
+  }
+  if (error instanceof BusinessRuleError) {
+    return failureResponse(422, error.code, error.message);
   }
   return null;
 }
