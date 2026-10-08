@@ -1,0 +1,261 @@
+# GebeyaLink Frontend Architecture & Plan
+
+Status: approved plan (read-only until a phase is kicked off). Companion to
+`docs/frontend-design-direction.md`, which is the standing product requirement.
+
+This document records the current state, the technical architecture, the design
+system approach, the phase roadmap with review gates, and the API gaps to close
+before C6. It exists so no session has to re-derive these decisions.
+
+---
+
+## 1. Current state & constraints
+
+### What exists
+
+- The web UI is **greenfield**. `apps/web` has 22 REST route handlers under
+  `app/api/v1/` + better-auth (`app/api/auth/[...all]`), and only the untouched
+  create-next-app template as a page (`app/page.tsx`, `app/page.module.css`).
+- No styling system (no Tailwind, no CSS framework), no component library, no
+  state/data-fetching library, no form/animation libraries. `app/globals.css` is
+  the template's plain CSS.
+- No `features/`, `components/`, or `src/` dirs yet. Domain code lives in
+  `apps/web/server/` (server-only). `packages/ui` (`@gebeyalink/ui`) is an
+  intentional empty stub per `docs/tech-stack.md` §22 — web components belong in
+  `apps/web`, shared ones only in `packages/ui`.
+- Backend coverage (C1–C5) is complete through **payment confirmed**: auth/roles,
+  cooperatives, collection centers, farmers, deliveries, inventory lots,
+  marketplace listings (search/filter/CRUD), orders (place/accept/reject/expire/
+  cancel with audit events), payments (submit/confirm/fail), products.
+- Transport UI is **C6-gated** (no shipment data exists). Disputes + audit-read
+  UI is **C7-gated**.
+
+### Stack constraints (Next.js 16.3.8 / React 19.2.3)
+
+From the bundled docs in `node_modules/next/dist/docs/` (read them, do not guess):
+
+- Turbopack is the default bundler for `next dev` / `next build`; no flag needed.
+- Root layout required; `PageProps<'/route'>` / `LayoutProps<'/route'>` are
+  globally generated helpers (no import).
+- `params`, `searchParams`, `cookies()`, `headers()` are **Promises** — await them.
+- Server Components default; `'use client'` for client components; pass only
+  serializable props from server → client.
+- `metadata`/`generateMetadata` only in server components.
+- Deprecated: `middleware` file → use **`proxy.ts`**; `runtime = 'edge'`;
+  `next/image` `priority` → **`preload`**; single-arg `revalidateTag`; `next lint`
+  command (use `eslint .` directly).
+- Recommended CSS stack (docs `11-css.md`): **Tailwind for most styling + CSS
+  Modules for component-specific styles**; global CSS only for truly global
+  rules. Tailwind v4 setup: dev deps `tailwindcss` + `@tailwindcss/postcss`,
+  `postcss.config.mjs` with `plugins: { '@tailwindcss/postcss': {} }`, and
+  `@import 'tailwindcss';` in `globals.css`. No `tailwind.config.*` file.
+
+### Repo mandates (`docs/tech-stack.md`)
+
+- §3: separation of `app/` (routes) · `features/` (UI/client modules) ·
+  `server/` (server-only); "API client abstraction on the client side";
+  authentication-aware routing; **role/permission-aware UI structure**.
+  Purpose: web primarily serves Buyer, Cooperative Staff, Admin.
+- §9–§10: Better Auth cookie sessions on web; authorization is
+  role + org/ownership scope + **valid business state** — the UI must mirror it
+  (e.g., cancel button only while the order is still cancellable).
+- §11: zod from `packages/validation` may be reused client-side as a convenience
+  only — never a correctness boundary.
+- §22: don't force components into `packages/ui`.
+- Collection agent is mobile/offline-first (Expo + SQLite) long-term; we build a
+  **responsive touch web experience now**, offline sync later.
+- Testing bar: `lint` / `typecheck` / `test` (vitest) / `e2e` (Playwright).
+
+---
+
+## 2. Visual-language exploration brief (Foundation gate)
+
+The Foundation phase (F0) produces **2–3 candidate directions**, each rendered on
+the same prototype screens (a private `/prototype` route), compared on this matrix:
+
+| Axis | Question |
+|---|---|
+| Typography | professional B2B vs. more modern/approachable |
+| Palette | agricultural green/earth tones **without** looking like a generic farming app |
+| Composition | marketplace density vs. spacious intelligence/supply-chain feel |
+| Status language | clear colors + labels (and shapes) for Available, Reserved, Committed, Dispatched, Completed, etc. |
+| Quantity language | kg/tonne emphasis, inventory availability, minimum order, progress indicators |
+| Cards/tables | alternatives that avoid generic SaaS dashboard patterns |
+| Mobile/touch | especially for the Collection Agent workflow |
+| Order journey | timeline/progress visualization rather than tables |
+
+**Decision rule: the direction is chosen once; it becomes the GebeyaLink design
+system** for every subsequent phase. No re-litigating per screen.
+
+---
+
+## 3. Design system architecture
+
+### Token layers (in `globals.css` / Tailwind v4 `@theme`)
+
+- **Color**: ink/paper base (near-black text on warm off-white surfaces), a small
+  set of commodity accents, a semantic status set (available / reserved /
+  committed / dispatched / sold; pending / accepted / rejected / expired /
+  cancelled; payment pending / confirmed / failed), destructive/attention.
+  Tokens must be semantic (`--color-surface`, `--color-status-available`), not
+  literal hues at call sites, so the chosen direction can retune globally.
+- **Typography**: display/headline/body/caption scale + a numeric treatment for
+  weights (kg/t) and money (birr) — tabular figures, mono where it aids scanning.
+  Concrete families are an F0 output (via `next/font`); Geist is the placeholder.
+- **Spacing / shape / elevation**: one spacing scale, radius scale, shadow/elevation
+  scale (keep elevation rare — prefer borders and surface tone).
+- **Motion**: durations + easings for transitions/entrances; purposeful only.
+- **Responsive**: breakpoints per workflow; mobile-first base.
+
+### Primitives inventory (first pass, in `features/ui/`)
+
+Button (variants/sizes, incl. large touch targets), Text/Select/Textarea fields
+with labels+errors, Dialog/Sheet, Tabs, Toast, **dense Table** and **ListRow**
+patterns (both first-class), Card/Surface, Section header, Journey/Timeline
+stepper, Availability meter (available/reserved/committed split bar),
+Quantity/Weight display, Money display, Grade mark (A/B/C), Status mark
+(shape + label + color), Deadline countdown (24h response window), Empty state,
+Skeleton, Search bar, Filter chips, Pagination, Bottom action bar (mobile),
+Page header, Role nav shells.
+
+### Status & quantity language (domain-specific, not generic badges)
+
+- Order journey: step/timeline component driven by status + timestamps
+  (`createdAt`, `acceptedAt`, `rejectedAt`, `expiresAt`, payment attempts) —
+  rendered as progression, not a colored pill in a table cell.
+- Inventory states (AVAILABLE → RESERVED → COMMITTED → DISPATCHED → SOLD) get a
+  consistent shape/color/label vocabulary reused in meters, tables, and detail.
+- Quantities always carry unit context; availability shown as a split bar with
+  numbers; MOQ surfaced wherever quantity is chosen.
+
+### Layout language per role (shells differ — no single template)
+
+- **Buyer**: editorial/commerce top-nav marketplace; large supply surfaces.
+- **Cooperative staff**: operations console with contextual navigation; dense
+  where operational (incoming orders with countdowns).
+- **Collection agent**: full-screen touch stepper; big targets; bottom actions.
+- **Transporter** (C6): simple mobile logistics workflow.
+- **Admin**: oversight views; density where needed.
+
+---
+
+## 4. Technical architecture
+
+### Directory layout
+
+```
+apps/web/
+  app/
+    (auth)/sign-in, sign-up, ...        auth screens
+    (buyer)/marketplace, orders, ...    buyer shell
+    (coop)/ops, inventory, orders, ...  cooperative shell
+    (agent)/...                         touch shell
+    (admin)/...                         oversight shell
+    _prototype/                         F0 comparison screens (private)
+    api/...                             existing route handlers (unchanged)
+  features/
+    ui/                                 design system (tokens usage, primitives)
+    auth/  marketplace/  orders/  payments/  inventory/  collection/
+    coop/  admin/                       each: components/ queries/ mutations/
+  lib/
+    api/                                typed API client for /api/v1
+    session/                            server-side session/role helpers
+  server/                               server-only domain (unchanged)
+```
+
+### Data access
+
+- **Reads**: Server Components call server services directly (import from
+  `../../server/...` behind `features/*/queries` — server-only, never shipped to
+  the client). No HTTP hop for RSC data.
+- **Mutations**: typed client (`lib/api`) against the existing `/api/v1` routes,
+  then `revalidatePath` / `router.refresh()`. Zod input types from
+  `packages/validation` reused for client-side convenience validation.
+- Responses are the existing DTOs (`{ data }` / `{ error: { code, message } }`);
+  never render raw rows.
+
+### Auth & role-aware routing
+
+- Session via better-auth on the server (`headers()`); role from `user_roles`.
+- Each role group's `layout.tsx` enforces role server-side and redirects
+  (`redirect()`); unauthenticated redirect via `proxy.ts` (Next 16 convention).
+- UI gates mirror server authz: actions rendered only when role + scope + business
+  state allow (buttons still re-checked server-side — UI gating is UX, not
+  security).
+
+### Styling decision
+
+Tailwind v4 + CSS Modules for bespoke compositions + design tokens in
+`globals.css` (matches bundled Next docs guidance). Component policy:
+**custom-first visuals**; any third-party helper must be headless/unstyled
+(consider only for dialog/select/combobox focus management + a11y), evaluated at
+F0 start, and must be invisible in the final visual identity. No shadcn/default
+component-library look.
+
+### Testing & verification
+
+- Existing: vitest (server/API), Playwright (`e2e/`), eslint, tsc.
+- Per screen: **browser-automation skill** visual QA (renders, console clean,
+  assertions on key content) — do not ask humans to "look at it" for basics.
+- Per journey: Playwright e2e (buyer journey first).
+- Component tests sparingly (only behavior-rich primitives).
+
+### Explicit non-goals (now)
+
+- Maps/location surfaces: the data model has free-text `location` only — no map
+  until the data supports it.
+- Dark mode: tokens will be dark-ready; not shipped initially.
+- i18n: English; keep copy in tokens/constants so localization can land later.
+- Offline: Expo app (separate track).
+- Notifications UI: backend doesn't exist (P0 in PRD §35 — tracked as a gap).
+
+---
+
+## 5. Phase roadmap & review gates
+
+| Phase | Scope | Gate |
+|---|---|---|
+| **F0 Foundation** | Tokens, primitives, role shells, 2–3 directions on `/prototype` screens per §2 matrix | **Direction picked once → design system locked** |
+| **F1 Buyer journey** | sign-in/up → marketplace browse/search/filter → commodity listing surface + availability viz → quantity/MOQ order creation → order journey timeline → payment attempt + status | Review stop; Playwright e2e for the journey |
+| **F2 Cooperative ops** | inventory availability surfaces, listings management, incoming-orders board with 24h countdowns, accept/reject (reason dialog), payment confirm/fail, centers/farmers basics | Review stop |
+| **F3 Collection agent (touch web)** | center select → farmer search/create → delivery capture stepper (claimed/measured/accepted/rejected + grade) → history | Review stop; touch/responsive QA |
+| **F4 Admin** | cooperative verification queue, participants/transactions read views, config display; metrics when APIs exist | Review stop |
+| **C6 plug-in** | transport arrangement (coop), transporter portal, shipment tracking, buyer delivery-confirmation; order journey extends | Own phase |
+| **C7 plug-in** | disputes (open/respond/resolve), audit-trail view | Own phase |
+
+Sequence rationale: C5 completes the core transaction, so F1 can build the real
+buyer experience now; C6/C7 plug into flows afterward. Frontend problems can
+influence API/DTO adjustments before the backend hardens.
+
+---
+
+## 6. API/DTO gap register
+
+Needed by (not built yet — do not invent client-side workarounds):
+
+| Gap | Needed by | Notes |
+|---|---|---|
+| Public config endpoint (MOQ, response window) | F1 (order form) | MOQ is env-only (`MIN_ORDER_QUANTITY_KG`); FR-018 says it must not be hardcoded in the UI |
+| Buyer verification model + endpoints | F1/F4 | Ordering-requires-Approved (BR-001) has no data model yet; F1 shows account state only |
+| `/users` list/roles endpoints | F4 | Admin participants view |
+| Order events / audit **read** endpoint | F1 (richer) → C7 | F1 timeline composes from DTO timestamps + payment attempts; full audit trail read is C7 |
+| Notifications backend + endpoints | post-F1 | PRD §35/§59 P0; no channel/infra exists |
+| Metrics/aggregates endpoints | F4 | PRD §50/§51 dashboards (P1) |
+| Market-price reference endpoints | later | PRD §14 (P1) |
+| Shipments/transport endpoints | C6 | Entire transport UI |
+| Dispute endpoints | C7 | Entire dispute UI |
+
+Each gap is surfaced **before** the phase that needs it, so DTO adjustments land
+while the backend is still fluid.
+
+---
+
+## 7. Definition of done (per phase)
+
+1. `npm run typecheck` + `npm run lint` — no new issues beyond documented baseline.
+2. Full vitest suite stays green (documented C3 failures in
+   `tests/collection.test.ts` remain the only known failures).
+3. Browser-automation visual QA passes for every new/changed screen (console
+   clean, key assertions).
+4. Playwright e2e for completed journeys (buyer journey in F1).
+5. Review stop with the user before the next phase.
