@@ -7,19 +7,11 @@ import type { PlatformRole } from '@gebeyalink/types';
 
 import { auth } from '@/server/auth';
 import { getActor } from '@/server/authz/guards';
+import { ROLE_HOME } from './role-home';
 
 export type PageSession = {
   user: { id: string; email: string; name: string };
   role: PlatformRole | null;
-};
-
-/** Default landing route per role — used for sign-in and wrong-role redirects. */
-const ROLE_HOME: Record<PlatformRole, string> = {
-  admin: '/admin',
-  cooperative_staff: '/ops',
-  collection_agent: '/agent',
-  buyer: '/marketplace',
-  transporter: '/transport',
 };
 
 /** Signed-in user + platform role for a server component. Null when anonymous. */

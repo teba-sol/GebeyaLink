@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
 import { authClient } from '@/lib/api/auth-client';
+import { roleHomeFromString } from '@/lib/session/role-home';
 
 export function SignInForm() {
   const router = useRouter();
@@ -24,7 +25,19 @@ export function SignInForm() {
         setError(res.error.message ?? 'Sign-in failed. Check your details.');
         return;
       }
-      router.push('/marketplace');
+      let destination = roleHomeFromString(null);
+      try {
+        const me = await fetch('/api/v1/me', {
+          headers: { accept: 'application/json' },
+        });
+        const body = (await me.json().catch(() => null)) as
+          | { data: { role: string | null } }
+          | null;
+        destination = roleHomeFromString(body?.data?.role ?? null);
+      } catch {
+        destination = roleHomeFromString(null);
+      }
+      router.push(destination);
       router.refresh();
     });
   };
