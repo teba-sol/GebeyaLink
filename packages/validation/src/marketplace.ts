@@ -59,6 +59,7 @@ export const listMarketplaceQuerySchema = z.object({
   maxPrice: priceQuerySchema.optional(),
   location: z.string().trim().min(1).max(300).optional(),
   status: z.enum(LISTING_STATUSES).optional(),
+  sort: z.enum(['newest', 'price_asc', 'price_desc']).default('newest'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

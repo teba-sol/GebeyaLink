@@ -19,7 +19,7 @@ const ROLE_HOME: Record<PlatformRole, string> = {
   cooperative_staff: '/ops',
   collection_agent: '/agent',
   buyer: '/marketplace',
-  transporter: '/',
+  transporter: '/transport',
 };
 
 /** Signed-in user + platform role for a server component. Null when anonymous. */
@@ -65,5 +65,17 @@ export async function restrictToRole(
   if (!session.role || !roles.includes(session.role)) {
     redirect(session.role ? ROLE_HOME[session.role] : '/');
   }
+  return session;
+}
+
+/**
+ * Onboarding gate (docs/prd.md §49): require a signed-in user who has not yet
+ * been assigned a platform role. Users who already have a role go to their
+ * own workspace.
+ */
+export async function requireOnboardingSession(): Promise<PageSession> {
+  const session = await getPageSession();
+  if (!session) redirect('/sign-in');
+  if (session.role) redirect(ROLE_HOME[session.role]);
   return session;
 }

@@ -1,21 +1,15 @@
-import { eq, inArray, like } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { GET as CENTERS_GET, POST as CENTERS_POST } from '../app/api/v1/collection-centers/route';
-import { GET as CENTER_GET, PATCH as CENTER_PATCH } from '../app/api/v1/collection-centers/[id]/route';
-import { GET as DELIVERIES_GET, POST as DELIVERIES_POST } from '../app/api/v1/deliveries/route';
-import { GET as DELIVERY_GET } from '../app/api/v1/deliveries/[id]/route';
+import { PATCH as CENTER_PATCH } from '../app/api/v1/collection-centers/[id]/route';
+import { POST as DELIVERIES_POST } from '../app/api/v1/deliveries/route';
 import { GET as INVENTORY_GET } from '../app/api/v1/inventory/route';
 import { GET as INVENTORY_ITEM_GET } from '../app/api/v1/inventory/[id]/route';
 import { GET as PRODUCTS_GET } from '../app/api/v1/products/route';
 import { db } from '../server/db';
-import { user, userRoles } from '../server/db/schema';
-import { account, session } from '../server/db/schema/auth';
-import { collectionCenters } from '../server/db/schema/collection-centers';
-import { cooperativeMembers, cooperatives } from '../server/db/schema/cooperatives';
-import { farmers } from '../server/db/schema/farmers';
-import { farmerDeliveries } from '../server/db/schema/farmer-deliveries';
-import { inventoryLots, inventoryLotSources } from '../server/db/schema/inventory';
+import { account, session, user, userRoles } from '../server/db/schema';
+import { cooperativeMembers } from '../server/db/schema/cooperatives';
 
 const mocks = vi.hoisted(() => ({ getSession: vi.fn() }));
 
@@ -71,7 +65,7 @@ async function createFarmerInline(
   sessionKey: keyof typeof identities,
   cooperativeId: string,
   overrides: Record<string, unknown> = {},
-): Promise<any> {
+): Promise<{ status: number; body: { data: { id: string } } }> {
   sessionFor(sessionKey);
   const req = new Request('http://localhost/api/v1/farmers', {
     method: 'POST',
@@ -84,7 +78,7 @@ async function createFarmerInline(
   });
   const { POST: FARMERS_POST } = await import('../app/api/v1/farmers/route');
   const res = await FARMERS_POST(req);
-  const body = (await res.json()) as any;
+  const body = (await res.json()) as { data: { id: string } };
   return { status: res.status, body };
 }
 
@@ -148,7 +142,15 @@ describe('C3 - Collection & Inventory', () => {
     const res = await PRODUCTS_GET(new Request(BASE_PRODUCTS));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.data.items.map((p: any) => p.id)).toContain('maize');
+    expect(body.data.map((p: { id: string }) => p.id)).toContain('maize');
+  });
+
+  it('products: buyers can read the reference catalog (F1 filter chips)', async () => {
+    sessionFor('buyer');
+    const res = await PRODUCTS_GET(new Request(BASE_PRODUCTS));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.map((p: { id: string }) => p.id)).toContain('maize');
   });
 
   it('collection centers: anon 401, buyer 403', async () => {

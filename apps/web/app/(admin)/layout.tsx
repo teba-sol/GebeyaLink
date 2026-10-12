@@ -4,7 +4,11 @@ import { requirePageRole } from '@/lib/session';
 
 const NAV = [
   { href: '/admin', label: 'Overview' },
+  { href: '/admin/verifications', label: 'Verifications' },
   { href: '/admin/cooperatives', label: 'Cooperatives' },
+  { href: '/admin/products', label: 'Products' },
+  { href: '/admin/users', label: 'Users' },
+  { href: '/admin/orders', label: 'Orders' },
 ] as const;
 
 export default async function AdminLayout({

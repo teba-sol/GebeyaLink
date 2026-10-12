@@ -1,5 +1,7 @@
 /** Cooperative (organization) technical types — C1. */
 
+import type { VerificationStatus } from './verification';
+
 export type CooperativeStatus = 'active' | 'inactive';
 
 export type CooperativeDto = {
@@ -7,6 +9,9 @@ export type CooperativeDto = {
   name: string;
   slug: string;
   status: CooperativeStatus;
+  verificationStatus: VerificationStatus;
+  reviewNote: string | null;
+  submittedByUserId: string | null;
   phone: string | null;
   email: string | null;
   region: string | null;

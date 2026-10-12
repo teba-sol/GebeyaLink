@@ -19,41 +19,19 @@ export const deliveryQualityGradeSchema = z.enum(DELIVERY_QUALITY_GRADES);
 
 export const deliveryStatusSchema = z.enum(DELIVERY_STATUSES);
 
-export const createDeliverySchema = z
-  .object({
-    cooperativeId: uuidSchema,
-    collectionCenterId: uuidSchema,
-    farmerId: uuidSchema,
-    productId: productIdSchema,
-    claimedQuantity: quantitySchema,
-    measuredQuantity: quantitySchema,
-    acceptedQuantity: quantitySchema,
-    rejectedQuantity: quantitySchema,
-    qualityGrade: deliveryQualityGradeSchema,
-    deliveryDate: z.iso.datetime({ offset: true }).optional(),
-    notes: z.string().trim().max(1000).nullish(),
-  })
-  .refine((input) => input.acceptedQuantity <= input.measuredQuantity, {
-    message: 'accepted quantity cannot exceed the measured quantity',
-    path: ['acceptedQuantity'],
-  })
-  .refine(
-    (input) =>
-      Math.abs(input.acceptedQuantity + input.rejectedQuantity - input.measuredQuantity) < 0.0003,
-    {
-      message: 'accepted + rejected must equal the measured quantity',
-      path: ['rejectedQuantity'],
-    },
-  )
-  .refine(
-    (input) =>
-      input.qualityGrade !== 'REJECTED' ||
-      (input.acceptedQuantity === 0 && input.rejectedQuantity === input.measuredQuantity),
-    {
-      message: 'a REJECTED grade must have zero accepted quantity',
-      path: ['qualityGrade'],
-    },
-  );
+export const createDeliverySchema = z.object({
+  cooperativeId: uuidSchema,
+  collectionCenterId: uuidSchema,
+  farmerId: uuidSchema,
+  productId: productIdSchema,
+  claimedQuantity: quantitySchema,
+  measuredQuantity: quantitySchema,
+  acceptedQuantity: quantitySchema,
+  rejectedQuantity: quantitySchema,
+  qualityGrade: deliveryQualityGradeSchema,
+  deliveryDate: z.iso.datetime({ offset: true }).optional(),
+  notes: z.string().trim().max(1000).nullish(),
+});
 
 export const listDeliveriesQuerySchema = z.object({
   cooperativeId: uuidSchema.optional(),

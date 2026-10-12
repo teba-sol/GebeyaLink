@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import type { CooperativeStatus } from '@gebeyalink/types';
+import type { CooperativeStatus, VerificationStatus } from '@gebeyalink/types';
 
 import { user } from './auth';
 
@@ -10,6 +10,10 @@ import { user } from './auth';
  * Soft deletes from day one (deletedAt). A member row links a platform user
  * to the cooperative they operate within; the platform role itself lives in
  * user_roles (single source of truth).
+ *
+ * `status` is the operational on/off flag (suspend/reactivate).
+ * `verificationStatus` is the onboarding review state (docs/prd.md §7.1):
+ * only approved cooperatives may publish marketplace inventory.
  */
 export const cooperatives = pgTable(
   'cooperatives',
@@ -18,6 +22,18 @@ export const cooperatives = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     status: text('status').$type<CooperativeStatus>().notNull().default('active'),
+    verificationStatus: text('verification_status')
+      .$type<VerificationStatus>()
+      .notNull()
+      .default('pending'),
+    reviewNote: text('review_note'),
+    submittedByUserId: text('submitted_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    reviewedByUserId: text('reviewed_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     phone: text('phone'),
     email: text('email'),
     region: text('region'),
@@ -31,6 +47,7 @@ export const cooperatives = pgTable(
   (table) => [
     uniqueIndex('cooperatives_slug_unique').on(table.slug),
     index('cooperatives_status_idx').on(table.status),
+    index('cooperatives_verification_status_idx').on(table.verificationStatus),
     index('cooperatives_deleted_at_idx').on(table.deletedAt),
   ],
 );

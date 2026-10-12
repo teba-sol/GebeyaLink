@@ -7,22 +7,35 @@ type QuantityStepperProps = {
   stepKg?: number;
   initialKg?: number;
   availableKg: number;
+  onChange?: (kg: number) => void;
 };
 
 /**
  * Order quantity selector: MOQ floor + availability ceiling, large targets
- * for touch. (Prototype — wiring to the place-order mutation happens in F1.)
+ * for touch. Reports the selected quantity via `onChange` for totals.
  */
 export function QuantityStepper({
   minKg,
   stepKg = 500,
   initialKg = minKg,
   availableKg,
+  onChange,
 }: QuantityStepperProps) {
-  const [kg, setKg] = useState(initialKg);
-
   const clamp = (next: number) => Math.min(availableKg, Math.max(minKg, next));
+  const [kg, setKg] = useState(() => clamp(initialKg));
+
+  const canDecrease = kg > minKg;
+  const canIncrease = kg < availableKg;
   const belowMin = kg < minKg;
+
+  const change = (next: number) => {
+    const value = clamp(next);
+    setKg(value);
+    onChange?.(value);
+  };
+
+  const buttonBase =
+    'flex size-12 items-center justify-center rounded-btn border border-line-strong bg-surface font-mono text-lg text-ink transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:border-line disabled:text-ink-faint disabled:hover:bg-surface';
 
   return (
     <div className="flex flex-col gap-3">
@@ -30,8 +43,9 @@ export function QuantityStepper({
         <button
           type="button"
           aria-label="Decrease quantity by 500 kilograms"
-          className="flex size-12 items-center justify-center rounded-btn border border-line-strong bg-surface font-mono text-lg text-ink hover:bg-surface-2"
-          onClick={() => setKg((q) => clamp(q - stepKg))}
+          disabled={!canDecrease}
+          className={buttonBase}
+          onClick={() => change(kg - stepKg)}
         >
           −
         </button>
@@ -46,8 +60,9 @@ export function QuantityStepper({
         <button
           type="button"
           aria-label="Increase quantity by 500 kilograms"
-          className="flex size-12 items-center justify-center rounded-btn border border-line-strong bg-surface font-mono text-lg text-ink hover:bg-surface-2"
-          onClick={() => setKg((q) => clamp(q + stepKg))}
+          disabled={!canIncrease}
+          className={buttonBase}
+          onClick={() => change(kg + stepKg)}
         >
           +
         </button>
@@ -64,7 +79,7 @@ export function QuantityStepper({
         available
         {belowMin ? (
           <span className="ml-1 font-semibold text-danger">
-            — below minimum
+            — below the minimum order
           </span>
         ) : null}
       </p>

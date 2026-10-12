@@ -16,6 +16,7 @@ import { POST as DELIVERIES_POST } from '../app/api/v1/deliveries/route';
 import { POST as FARMERS_POST } from '../app/api/v1/farmers/route';
 import { db } from '../server/db';
 import { account, session, user, userRoles } from '../server/db/schema';
+import { buyers } from '../server/db/schema/buyers';
 import { cooperativeMembers } from '../server/db/schema/cooperatives';
 import { inventoryLots } from '../server/db/schema/inventory';
 import { inventoryReservations, orders } from '../server/db/schema/orders';
@@ -148,6 +149,13 @@ describe('C4 - Marketplace Core', () => {
       if (identity.role) {
         await db.insert(userRoles).values({ userId: row.id, role: identity.role });
       }
+    }
+
+    // Approved buyer profiles (docs/prd.md §7.2): only verified buyers may order.
+    for (const buyer of [identities.buyer1, identities.buyer2]) {
+      await db
+        .insert(buyers)
+        .values({ userId: buyer.userId, organizationName: 'C4 Buyer', verificationStatus: 'approved' });
     }
 
     coopAId = await createCoop('C4 Coop A');

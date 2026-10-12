@@ -48,6 +48,20 @@ export function requireRole(actor: Actor | null, ...roles: PlatformRole[]): Acto
 }
 
 /**
+ * Onboarding boundary: a signed-in user may submit one organization
+ * registration while they have no platform role yet (docs/prd.md §49).
+ */
+export function requireNoRole(actor: Actor | null): Actor {
+  if (!actor) {
+    throw new AuthzError('forbidden', 'authentication required');
+  }
+  if (actor.role) {
+    throw new AuthzError('forbidden', 'account already has a platform role');
+  }
+  return actor;
+}
+
+/**
  * Cooperative ownership boundary (docs/roles-and-permissions.md §12).
  * Admins pass; cooperative staff and collection agents must have an active
  * membership in the cooperative (which must not be soft-deleted).

@@ -68,7 +68,7 @@ export async function createCollectionCenter(
   actor: Actor,
   input: CreateCollectionCenterInput,
 ): Promise<CollectionCenterDto> {
-  requireRole(actor, 'admin');
+  requireRole(actor, 'admin', 'cooperative_staff');
   await requireCooperativeScope(actor, input.cooperativeId);
 
   try {
@@ -142,8 +142,9 @@ export async function updateCollectionCenter(
   id: string,
   patch: UpdateCollectionCenterInput,
 ): Promise<CollectionCenterDto> {
-  requireRole(actor, 'admin');
-  await requireExisting(id);
+  requireRole(actor, 'admin', 'cooperative_staff');
+  const existing = await requireExisting(id);
+  await requireCooperativeScope(actor, existing.cooperativeId);
 
   try {
     const [row] = await db

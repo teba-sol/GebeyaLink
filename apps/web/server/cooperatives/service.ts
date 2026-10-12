@@ -2,13 +2,14 @@ import 'server-only';
 
 import { and, count, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import type { CooperativeDto, PaginatedCooperatives } from '@gebeyalink/types';
-import type { CreateCooperativeInput, UpdateCooperativeInput } from '@gebeyalink/validation';
+import type { CreateCooperativeInput, RegisterCooperativeInput, UpdateCooperativeInput } from '@gebeyalink/validation';
 
 import {
   AuthzError,
   type Actor,
   getActiveMemberships,
   requireCooperativeScope,
+  requireNoRole,
   requireRole,
 } from '../authz/guards';
 import { db } from '../db';
@@ -41,6 +42,9 @@ function toDto(row: CooperativeRow): CooperativeDto {
     name: row.name,
     slug: row.slug,
     status: row.status,
+    verificationStatus: row.verificationStatus,
+    reviewNote: row.reviewNote,
+    submittedByUserId: row.submittedByUserId,
     phone: row.phone,
     email: row.email,
     region: row.region,
@@ -78,6 +82,7 @@ export async function createCooperative(
         name: input.name,
         slug,
         status: input.status ?? 'active',
+        verificationStatus: 'approved',
         phone: input.phone ?? null,
         email: input.email ?? null,
         region: input.region ?? null,
@@ -88,8 +93,58 @@ export async function createCooperative(
       .returning();
     return toDto(row);
   } catch (error) {
-    const cause = (error as { cause?: unknown }).cause ?? error;
-    if (typeof cause === 'object' && cause !== null && 'code' in cause && cause.code === '23505') {
+    if (error instanceof ConflictError) throw error;
+    const cause = error as { cause?: { code?: string }; code?: string };
+    const code = cause?.cause?.code ?? cause?.code;
+    if (code === '23505') {
+      throw new ConflictError('a cooperative with this slug already exists');
+    }
+    throw error;
+  }
+}
+
+/**
+ * Self-service cooperative registration (docs/user-flows.md §3). A signed-in
+ * user with no platform role submits their organization; it starts `pending`
+ * until an admin verifies it. Approval grants the staff role + membership.
+ */
+export async function submitCooperativeRegistration(
+  actor: Actor | null,
+  input: RegisterCooperativeInput,
+): Promise<CooperativeDto> {
+  const authed = requireNoRole(actor);
+
+  const existing = await db.query.cooperatives.findFirst({
+    where: and(eq(cooperatives.submittedByUserId, authed.userId), notDeleted),
+  });
+  if (existing) {
+    throw new ConflictError('you already have a cooperative registration');
+  }
+
+  const slug = input.slug ?? (await uniqueSlug(input.name));
+  try {
+    const [row] = await db
+      .insert(cooperatives)
+      .values({
+        name: input.name,
+        slug,
+        status: 'active',
+        verificationStatus: 'pending',
+        submittedByUserId: authed.userId,
+        phone: input.phone ?? null,
+        email: input.email ?? null,
+        region: input.region ?? null,
+        zone: input.zone ?? null,
+        district: input.district ?? null,
+        address: input.address ?? null,
+      })
+      .returning();
+    return toDto(row);
+  } catch (error) {
+    if (error instanceof ConflictError) throw error;
+    const cause = error as { cause?: { code?: string }; code?: string };
+    const code = cause?.cause?.code ?? cause?.code;
+    if (code === '23505') {
       throw new ConflictError('a cooperative with this slug already exists');
     }
     throw error;

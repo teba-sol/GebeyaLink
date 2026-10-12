@@ -3,8 +3,8 @@
  *
  * Business-domain types are added per approved core: cooperatives (C1),
  * farmers (C2), deliveries + inventory (C3), marketplace listings + orders
- * (C4), order response + payment records (C5). Later cores (shipments,
- * disputes, ...) are added only when implemented from the approved
+ * (C4), order response + payment records (C5), shipments (C6). Later cores
+ * (disputes, ...) are added only when implemented from the approved
  * documents in `docs/`.
  */
 
@@ -81,3 +81,22 @@ export { PAYMENT_STATUSES } from './payments';
 export type { PaymentDto, PaymentStatus } from './payments';
 export { AUDIT_EVENT_TYPES } from './audit';
 export type { AuditEntity, AuditEventType } from './audit';
+export { VERIFICATION_ORG_TYPES, VERIFICATION_STATUSES } from './verification';
+export type {
+  VerificationOrgType,
+  VerificationRequestDto,
+  VerificationStatus,
+} from './verification';
+export type { BuyerDto } from './buyers';
+export type { TransporterDto } from './transporters';
+export {
+  SHIPMENT_CONDITIONS,
+  SHIPMENT_STATUSES,
+  SHIPMENT_TRANSPORTER_KINDS,
+} from './shipments';
+export type {
+  ShipmentCondition,
+  ShipmentDto,
+  ShipmentStatus,
+  ShipmentTransporterKind,
+} from './shipments';

@@ -13,6 +13,7 @@ import {
 } from '../authz/guards';
 import { ConflictError } from '../cooperatives/service';
 import { db } from '../db';
+import { BusinessRuleError } from '../http/errors';
 import { collectionCenters } from '../db/schema/collection-centers';
 import { farmers } from '../db/schema/farmers';
 import { farmerDeliveries } from '../db/schema/farmer-deliveries';
@@ -74,6 +75,25 @@ async function handleUniqueConflict(error: unknown): Promise<never> {
 export async function createDelivery(actor: Actor, input: CreateDeliveryInput): Promise<DeliveryDto> {
   requireRole(actor, ...DELIVERY_ALLOWED_ROLES);
   await requireCooperativeScope(actor, input.cooperativeId);
+
+  if (input.acceptedQuantity > input.measuredQuantity) {
+    throw new BusinessRuleError(
+      'quantity_mismatch',
+      'accepted quantity cannot exceed the measured quantity',
+    );
+  }
+  if (Math.abs(input.acceptedQuantity + input.rejectedQuantity - input.measuredQuantity) >= 0.0003) {
+    throw new BusinessRuleError('quantity_mismatch', 'accepted + rejected must equal the measured quantity');
+  }
+  if (
+    input.qualityGrade === 'REJECTED' &&
+    (input.acceptedQuantity !== 0 || input.rejectedQuantity !== input.measuredQuantity)
+  ) {
+    throw new BusinessRuleError(
+      'invalid_rejection',
+      'a REJECTED grade must have zero accepted quantity',
+    );
+  }
 
   const farmer = await db.query.farmers.findFirst({
     where: and(eq(farmers.id, input.farmerId), isNull(farmers.deletedAt)),

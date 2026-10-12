@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, count, desc, eq, gte, ilike, inArray, isNull, lte, or, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, inArray, isNull, lte, or, type SQL } from 'drizzle-orm';
 import type { MarketplaceListingDto, PaginatedMarketplaceListings } from '@gebeyalink/types';
 import type { CreateListingInput, ListMarketplaceQuery, UpdateListingInput } from '@gebeyalink/validation';
 
@@ -102,6 +102,17 @@ function buyerVisibilityConditions(): SQL[] {
   ];
 }
 
+function listingsOrderBy(sort: ListMarketplaceQuery['sort']) {
+  switch (sort) {
+    case 'price_asc':
+      return [asc(marketplaceListings.pricePerUnit), asc(marketplaceListings.createdAt)];
+    case 'price_desc':
+      return [desc(marketplaceListings.pricePerUnit), desc(marketplaceListings.createdAt)];
+    default:
+      return [desc(marketplaceListings.createdAt)];
+  }
+}
+
 export async function listListings(
   actor: Actor,
   query: ListMarketplaceQuery,
@@ -149,7 +160,7 @@ export async function listListings(
 
   const rows = await joinedFrom()
     .where(where)
-    .orderBy(desc(marketplaceListings.createdAt))
+    .orderBy(...listingsOrderBy(query.sort))
     .limit(query.limit)
     .offset((query.page - 1) * query.limit);
 
@@ -209,6 +220,12 @@ export async function createListing(
   });
   if (!cooperative || cooperative.status !== 'active') {
     throw new BusinessRuleError('cooperative_not_active', 'cooperative is not active');
+  }
+  if (cooperative.verificationStatus !== 'approved') {
+    throw new BusinessRuleError(
+      'cooperative_not_verified',
+      'cooperative is not approved for selling',
+    );
   }
   if (lot.availableQuantity < 0.001) {
     throw new BusinessRuleError(
@@ -283,6 +300,12 @@ export async function updateListing(
     });
     if (!cooperative || cooperative.status !== 'active') {
       throw new BusinessRuleError('cooperative_not_active', 'cooperative is not active');
+    }
+    if (cooperative.verificationStatus !== 'approved') {
+      throw new BusinessRuleError(
+        'cooperative_not_verified',
+        'cooperative is not approved for selling',
+      );
     }
     if (!lot || lot.availableQuantity < 0.001) {
       throw new BusinessRuleError(

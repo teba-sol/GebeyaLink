@@ -30,6 +30,7 @@
   /* Brand & attention */
   --accent: #2c8a4c;
   --accent-soft: #e2f3e4;
+  --accent-deep: #0f3a2c;
   --attention: #d99a1f;
   --attention-soft: #fbf0d4;
   --danger: #cc4b32;
@@ -50,6 +51,16 @@
   --st-expired: #a06a5c;
   --st-cancelled: #6d6a5c;
   --st-failed: #cc4b32;
+
+  /* Order completion + shipment lifecycle */
+  --st-completed: #0f3a2c;
+  --st-disputed: #b23b2e;
+  --st-transport-pending: #8a7a5c;
+  --st-pickup-pending: #d99a1f;
+  --st-pickup-confirmed: #3b74b8;
+  --st-in-transit: #3f6ad8;
+  --st-delivered: #2c8a4c;
+  --st-delayed: #c47f1a;
 
   /* Shape & composition */
   --r-card: 14px;
@@ -72,6 +83,7 @@
   --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-deep: var(--accent-deep);
   --color-attention: var(--attention);
   --color-attention-soft: var(--attention-soft);
   --color-danger: var(--danger);
@@ -89,6 +101,14 @@
   --color-st-expired: var(--st-expired);
   --color-st-cancelled: var(--st-cancelled);
   --color-st-failed: var(--st-failed);
+  --color-st-completed: var(--st-completed);
+  --color-st-disputed: var(--st-disputed);
+  --color-st-transport-pending: var(--st-transport-pending);
+  --color-st-pickup-pending: var(--st-pickup-pending);
+  --color-st-pickup-confirmed: var(--st-pickup-confirmed);
+  --color-st-in-transit: var(--st-in-transit);
+  --color-st-delivered: var(--st-delivered);
+  --color-st-delayed: var(--st-delayed);
 
   --font-sans: var(--f-body);
   --font-display: var(--f-display);
@@ -117,6 +137,7 @@ body {
   font-family: var(--f-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
 }
 
 a {
@@ -147,6 +168,14 @@ a {
 [data-status='expired'] { --status-color: var(--st-expired); }
 [data-status='cancelled'] { --status-color: var(--st-cancelled); }
 [data-status='failed'] { --status-color: var(--st-failed); }
+[data-status='completed'] { --status-color: var(--st-completed); }
+[data-status='disputed'] { --status-color: var(--st-disputed); }
+[data-status='transport_pending'] { --status-color: var(--st-transport-pending); }
+[data-status='pickup_pending'] { --status-color: var(--st-pickup-pending); }
+[data-status='pickup_confirmed'] { --status-color: var(--st-pickup-confirmed); }
+[data-status='in_transit'] { --status-color: var(--st-in-transit); }
+[data-status='delivered'] { --status-color: var(--st-delivered); }
+[data-status='delayed'] { --status-color: var(--st-delayed); }
 
 /* Status mark: soft filled pill — shape + label + color (never color alone). */
 .status-mark {
@@ -470,4 +499,254 @@ a {
 
 .ops-table tbody tr:nth-child(even) {
   background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Commerce marketplace — premium coffee-led buyer surface (Terra Market).
+ * ---------------------------------------------------------------------------
+ */
+
+/* Global focus affordance for commerce controls. */
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Commerce buttons. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--r-btn);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.7rem 1.25rem;
+  white-space: nowrap;
+  transition: background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000 10%);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background: var(--accent-soft);
+}
+
+/* Editorial hero — full-width, transparent split; photo bleeds to the edge. */
+.commerce-hero {
+  background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+}
+
+/* Break a section out of the padded container to span the full viewport. */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+/* Commodity photo fallback — names the commodity on a forest panel. */
+.commodity-panel {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  padding: 1.25rem;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(120% 100% at 20% 0%, rgba(255, 255, 255, 0.16) 0%, transparent 48%),
+    linear-gradient(150deg, #358f53 0%, #1d6b3c 58%, #155732 100%);
+}
+
+.commodity-panel::before {
+  content: attr(data-initial);
+  position: absolute;
+  right: -0.05em;
+  bottom: -0.3em;
+  font-family: var(--f-display);
+  font-size: 9rem;
+  line-height: 1;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+.commodity-panel__label {
+  position: relative;
+  max-width: 12ch;
+  font-family: var(--f-display);
+  font-size: 1.25rem;
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+/* Filter sidebar radio rows. */
+.field-heading {
+  margin: 0 0 0.25rem;
+  font-family: var(--f-num);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  border-radius: var(--r-btn);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.radio-row:hover {
+  background: var(--surface-2);
+}
+
+.radio-row:has(input:checked) {
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.radio-row input {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+  cursor: inherit;
+}
+
+/* Commodity grid — 3 / 2 / 1 columns. */
+.commodity-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .commodity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .commodity-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Commodity card — photo, grade badge, facts, clear call to action. */
+.commodity-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.commodity-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow:
+    0 2px 4px rgba(35, 30, 20, 0.06),
+    0 16px 40px -16px rgba(35, 30, 20, 0.18);
+}
+
+.commodity-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.commodity-card__media img {
+  object-fit: cover;
+}
+
+.commodity-card__grade {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+}
+
+.commodity-card__grade .status-mark {
+  box-shadow: 0 1px 2px rgba(35, 30, 20, 0.2);
+  backdrop-filter: blur(2px);
+}
+
+/* Active filter count badge. */
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--f-num);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile filter drawer. */
+.filter-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
+}
+
+.filter-drawer__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(22rem, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--paper);
+  box-shadow: -8px 0 24px -12px rgba(35, 30, 20, 0.25);
+}
+
+/* Sticky column rail used by results + detail screens. */
+.commerce-layout {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .commerce-layout {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
 }

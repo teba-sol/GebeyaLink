@@ -2,6 +2,7 @@ import type {
   InventoryStatus,
   OrderStatus,
   PaymentStatus,
+  ShipmentStatus,
 } from '@gebeyalink/types';
 
 export type StatusToken =
@@ -16,9 +17,17 @@ export type StatusToken =
   | 'rejected'
   | 'expired'
   | 'cancelled'
-  | 'failed';
+  | 'failed'
+  | 'completed'
+  | 'disputed'
+  | 'transport_pending'
+  | 'pickup_pending'
+  | 'pickup_confirmed'
+  | 'in_transit'
+  | 'delivered'
+  | 'delayed';
 
-export type DomainStatus = InventoryStatus | OrderStatus | PaymentStatus;
+export type DomainStatus = InventoryStatus | OrderStatus | PaymentStatus | ShipmentStatus;
 
 const TOKENS: Record<DomainStatus, StatusToken> = {
   AVAILABLE: 'available',
@@ -29,11 +38,20 @@ const TOKENS: Record<DomainStatus, StatusToken> = {
   PENDING: 'pending',
   ACCEPTED: 'accepted',
   PAYMENT_CONFIRMED: 'confirmed',
+  COMPLETED: 'completed',
+  DISPUTED: 'disputed',
   REJECTED: 'rejected',
   EXPIRED: 'expired',
   CANCELLED: 'cancelled',
   CONFIRMED: 'confirmed',
   FAILED: 'failed',
+  TRANSPORT_PENDING: 'transport_pending',
+  PICKUP_PENDING: 'pickup_pending',
+  PICKUP_CONFIRMED: 'pickup_confirmed',
+  IN_TRANSIT: 'in_transit',
+  DELIVERED: 'delivered',
+  DELIVERY_CONFIRMED: 'completed',
+  DELAYED: 'delayed',
 };
 
 const LABELS: Record<StatusToken, string> = {
@@ -49,6 +67,14 @@ const LABELS: Record<StatusToken, string> = {
   expired: 'Expired',
   cancelled: 'Cancelled',
   failed: 'Failed',
+  completed: 'Completed',
+  disputed: 'Disputed',
+  transport_pending: 'Transport pending',
+  pickup_pending: 'Pickup pending',
+  pickup_confirmed: 'Pickup confirmed',
+  in_transit: 'In transit',
+  delivered: 'Delivered',
+  delayed: 'Delayed',
 };
 
 export function statusToken(status: DomainStatus): StatusToken {

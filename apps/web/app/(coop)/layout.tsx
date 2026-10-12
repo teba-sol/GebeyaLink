@@ -2,10 +2,14 @@ import Link from 'next/link';
 
 import { requirePageRole } from '@/lib/session';
 
+import { MobileNav } from './mobile-nav';
+
 const NAV = [
   { href: '/ops', label: 'Overview' },
   { href: '/ops/inventory', label: 'Inventory' },
+  { href: '/ops/deliveries', label: 'Deliveries' },
   { href: '/ops/orders', label: 'Incoming orders' },
+  { href: '/ops/people', label: 'Centers & farmers' },
 ] as const;
 
 export default async function CoopLayout({
@@ -15,12 +19,9 @@ export default async function CoopLayout({
 
   return (
     <div className="flex min-h-dvh">
-      <aside className="sticky top-0 flex h-dvh w-60 flex-none flex-col gap-6 border-r border-line bg-surface p-5">
+      <aside className="sticky top-0 hidden h-dvh w-60 flex-none flex-col gap-6 border-r border-line bg-surface p-5 lg:flex">
         <div className="flex flex-col gap-1">
-          <Link
-            href="/"
-            className="font-display text-lg font-bold tracking-tight"
-          >
+          <Link href="/" className="font-display text-lg font-bold tracking-tight">
             GebeyaLink
           </Link>
           <span className="font-mono text-[0.625rem] tracking-[0.14em] text-ink-faint uppercase">
@@ -44,13 +45,22 @@ export default async function CoopLayout({
           <span className="truncate font-mono text-[0.6875rem] text-ink-soft">
             {session.user.email}
           </span>
-          <span className="text-[0.6875rem] text-ink-faint">
-            Cooperative staff
-          </span>
+          <span className="text-[0.6875rem] text-ink-faint">Cooperative staff</span>
         </div>
       </aside>
 
       <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-line bg-paper/90 px-4 backdrop-blur lg:hidden">
+          <div className="flex flex-col gap-0.5">
+            <Link href="/" className="font-display text-base font-bold tracking-tight">
+              GebeyaLink
+            </Link>
+            <span className="font-mono text-[0.625rem] tracking-[0.14em] text-ink-faint uppercase">
+              Cooperative ops
+            </span>
+          </div>
+          <MobileNav email={session.user.email} />
+        </header>
         <main className="mx-auto w-full max-w-[var(--container-page)] px-6 py-8 lg:px-10">
           {children}
         </main>

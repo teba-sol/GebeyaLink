@@ -11,3 +11,4 @@ export { Quantity } from './Quantity';
 export { QuantityStepper } from './QuantityStepper';
 export type { DomainStatus, StatusToken } from './StatusMark';
 export { StatusMark, statusLabel, statusToken } from './StatusMark';
+export { VerificationMark, verificationLabel } from './VerificationMark';

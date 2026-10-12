@@ -23,6 +23,7 @@ import {
 } from '../authz/guards';
 import { minOrderQuantityKg, responseWindowMs } from '../config/business';
 import { db } from '../db';
+import { buyers } from '../db/schema/buyers';
 import { cooperatives } from '../db/schema/cooperatives';
 import { inventoryLots } from '../db/schema/inventory';
 import { marketplaceListings } from '../db/schema/marketplace';
@@ -218,6 +219,18 @@ export async function releaseExpiredReservations(): Promise<number> {
 
 export async function placeOrder(actor: Actor, input: PlaceOrderInput): Promise<OrderDto> {
   requireRole(actor, 'admin', 'buyer');
+
+  if (actor.role === 'buyer') {
+    const buyer = await db.query.buyers.findFirst({
+      where: and(eq(buyers.userId, actor.userId), isNull(buyers.deletedAt)),
+    });
+    if (!buyer || buyer.verificationStatus !== 'approved') {
+      throw new BusinessRuleError(
+        'buyer_not_verified',
+        'your buyer organization is not yet approved to place orders',
+      );
+    }
+  }
 
   await releaseExpiredReservations();
 

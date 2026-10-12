@@ -1,34 +1,43 @@
-import { Card, Eyebrow } from '@/features/ui';
+import { SignOutButton } from '@/features/auth/components/sign-out-button';
+import { Card } from '@/features/ui';
 import { requirePageRole } from '@/lib/session';
 
-export default async function AccountPage() {
+const ROLE_LABELS: Record<string, string> = {
+  buyer: 'Verified buyer',
+  cooperative_staff: 'Cooperative staff',
+  collection_agent: 'Field agent',
+  transporter: 'Transporter',
+  admin: 'Administrator',
+};
+
+export default async function BuyerAccountPage() {
   const session = await requirePageRole('buyer');
+  const email = session.user.email ?? '';
+  const roleLabel = ROLE_LABELS[session.role ?? 'buyer'];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Eyebrow>Buyer · account</Eyebrow>
-        <h1 className="font-display text-4xl font-semibold">Account</h1>
-      </div>
-
-      <Card padding="lg" className="flex flex-col gap-4">
-        <dl className="flex flex-col gap-3 text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <dt className="text-ink-soft">Email</dt>
-            <dd className="font-mono text-xs">{session.user.email}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <dt className="text-ink-soft">Role</dt>
-            <dd>
-              <span className="rounded-pill border border-line bg-surface px-3 py-1 font-mono text-xs">
-                {session.role ?? 'unassigned'}
-              </span>
-            </dd>
-          </div>
-        </dl>
-        <p className="text-sm text-ink-soft">
-          Profile, saved addresses and notification preferences arrive in F1.
+    <div className="flex max-w-2xl flex-col gap-6">
+      <header className="flex flex-col gap-2">
+        <p className="font-mono text-[0.6875rem] font-semibold tracking-[0.18em] text-ink-faint uppercase">
+          Buyer · account
         </p>
+        <h1 className="font-display text-4xl font-semibold">Account</h1>
+      </header>
+
+      <Card padding="lg" className="flex flex-col gap-5">
+        <div className="flex items-center justify-between gap-4 border-b border-line pb-4">
+          <span className="font-display text-lg font-semibold">{email}</span>
+          <span className="status-mark" data-status="confirmed">
+            <span className="status-mark__swatch" aria-hidden="true" />
+            <span>{roleLabel}</span>
+          </span>
+        </div>
+        <p className="text-sm text-ink-soft">
+          Your account is verified for ordering. Orders are placed against
+          platform-verified cooperatives and reviewed within their response
+          window.
+        </p>
+        <SignOutButton className="self-start rounded-btn border border-line-strong bg-surface px-4 py-2 text-sm font-medium text-ink hover:bg-surface-2" />
       </Card>
     </div>
   );

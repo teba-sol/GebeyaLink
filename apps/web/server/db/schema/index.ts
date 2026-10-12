@@ -27,3 +27,6 @@ export {
 } from './orders';
 export { auditEvents, payments, paymentsRelations } from './payments';
 export { userRoles, userRolesRelations } from './user-roles';
+export { buyers, buyersRelations } from './buyers';
+export { transporters, transportersRelations } from './transporters';
+export { shipments, shipmentsRelations } from './shipments';
