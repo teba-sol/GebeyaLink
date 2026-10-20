@@ -90,6 +90,32 @@ export const listOrdersQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+/**
+ * AI-assisted sourcing search (buyer marketplace). `aiSearchQuerySchema`
+ * guards the inbound natural-language request (length-limited); the model is
+ * treated as untrusted output and re-validated independently with
+ * `aiSourcingModelOutputSchema` — it never maps to a write.
+ */
+export const aiSearchQuerySchema = z.object({
+  query: z.string().trim().min(3).max(300),
+});
+
+export const AI_QUANTITY_UNITS = ['kg', 'tonne', 'ton', 'quintal', 'gram'] as const;
+
+export const aiSourcingModelOutputSchema = z.object({
+  commodity: z.string().trim().min(1).max(80).nullish(),
+  qualityGrade: z.string().trim().min(1).max(20).nullish(),
+  region: z.string().trim().min(1).max(120).nullish(),
+  maxPricePerKg: priceQuerySchema.nullish(),
+  quantityKg: quantityQuerySchema.nullish(),
+  quantityValue: quantityQuerySchema.nullish(),
+  quantityUnit: z.enum(AI_QUANTITY_UNITS).nullish(),
+  notes: z.string().trim().max(500).nullish(),
+});
+
+export type AiSearchInput = z.input<typeof aiSearchQuerySchema>;
+export type AiSourcingModelOutput = z.output<typeof aiSourcingModelOutputSchema>;
+
 export type CreateListingInput = z.input<typeof createListingSchema>;
 export type UpdateListingInput = z.input<typeof updateListingSchema>;
 export type ListMarketplaceQuery = z.output<typeof listMarketplaceQuerySchema>;

@@ -57,6 +57,7 @@ export type {
   ProductDto,
 } from './collection';
 export {
+  AI_SOURCING_WARNING_CODES,
   LISTING_STATUSES,
   ORDER_STATUSES,
   REJECTION_REASONS,
@@ -64,6 +65,10 @@ export {
   RESERVATION_STATUSES,
 } from './marketplace';
 export type {
+  AiSourcingCriteria,
+  AiSourcingResult,
+  AiSourcingWarning,
+  AiSourcingWarningCode,
   ListingStatus,
   MarketplaceListQuery,
   MarketplaceListingDto,

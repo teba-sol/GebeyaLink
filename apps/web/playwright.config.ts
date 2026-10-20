@@ -14,5 +14,7 @@ export default defineConfig({
     url: 'http://localhost:3000/api/v1/health',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // Deterministic offline AI provider for the AI sourcing e2e (no live calls).
+    env: { ...process.env, AI_PROVIDER: 'mock' },
   },
 });

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { listMarketplaceQuerySchema } from '@gebeyalink/validation';
 import type { ProductDto } from '@gebeyalink/types';
 
+import { AiSourcingPanel } from '@/features/marketplace/components/ai-sourcing-panel';
 import { MarketplaceFilters, type ActiveMarketplaceFilters } from '@/features/marketplace/components/filter-sidebar';
 import { ListingCard } from '@/features/marketplace/components/listing-card';
 import { Pagination } from '@/features/marketplace/components/pagination';
@@ -10,6 +11,7 @@ import { MarketplaceHero, HowItWorks } from '@/features/marketplace/components/m
 import { SortSelect } from '@/features/marketplace/components/sort-select';
 import { browseListings, getProductCatalog, productName } from '@/features/marketplace/queries';
 import { requirePageRole } from '@/lib/session';
+import { minOrderQuantityKg } from '@/server/config/business';
 
 const PAGE_LIMIT = 12;
 
@@ -44,6 +46,7 @@ export default async function MarketplacePage(props: { searchParams: Promise<Rec
         : null,
     location: parsed.location ?? null,
     maxPrice: parsed.maxPrice != null ? String(parsed.maxPrice) : null,
+    minAvailable: parsed.minAvailable != null ? String(parsed.minAvailable) : null,
   };
 
   const failed = result === null || catalog.length === 0;
@@ -66,6 +69,11 @@ export default async function MarketplacePage(props: { searchParams: Promise<Rec
             Browse verified cooperative inventory available to order.
           </p>
         </div>
+
+        <AiSourcingPanel
+          minOrderQuantityKg={minOrderQuantityKg()}
+          products={catalog.map((product) => ({ id: product.id, name: product.name }))}
+        />
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[220px_1fr]">
           {/* Sidebar */}

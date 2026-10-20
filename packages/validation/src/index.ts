@@ -8,6 +8,12 @@
 
 export { productIdSchema, uuidSchema } from './common';
 export {
+  AI_QUANTITY_UNITS,
+  aiSearchQuerySchema,
+  aiSourcingModelOutputSchema,
+} from './marketplace';
+export type { AiSearchInput, AiSourcingModelOutput } from './marketplace';
+export {
   cooperativeSlugSchema,
   cooperativeStatusSchema,
   createCooperativeSchema,

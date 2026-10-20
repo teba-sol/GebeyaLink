@@ -77,6 +77,40 @@ export type PaginatedMarketplaceListings = {
   total: number;
 };
 
+/**
+ * AI-assisted sourcing search: the structured search criteria the AI extracts
+ * from a buyer's natural-language request. Criteria are read-only search
+ * filters — they never reserve inventory or create an order (the buyer still
+ * places an order to hold stock).
+ */
+export type AiSourcingCriteria = {
+  productId?: string;
+  qualityGrade?: DeliveryQualityGrade;
+  location?: string;
+  maxPrice?: number;
+  /** Minimum available inventory (kg) the buyer needs — a search-only filter. */
+  minAvailable?: number;
+};
+
+export const AI_SOURCING_WARNING_CODES = [
+  'unsupported_commodity',
+  'invalid_grade',
+] as const;
+export type AiSourcingWarningCode = (typeof AI_SOURCING_WARNING_CODES)[number];
+
+export type AiSourcingWarning = {
+  code: AiSourcingWarningCode;
+  message: string;
+};
+
+export type AiSourcingResult = {
+  query: string;
+  criteria: AiSourcingCriteria;
+  /** Platform minimum order quantity in kg (never hardcoded client-side). */
+  minOrderQuantityKg: number;
+  warnings: AiSourcingWarning[];
+};
+
 export type OrderDto = {
   id: string;
   buyerId: string;

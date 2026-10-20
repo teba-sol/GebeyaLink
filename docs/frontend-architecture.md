@@ -233,6 +233,24 @@ Sequence rationale: C5 completes the core transaction, so F1 can build the real
 buyer experience now; C6/C7 plug into flows afterward. Frontend problems can
 influence API/DTO adjustments before the backend hardens.
 
+### AI sourcing search (F1 enhancement)
+
+Buyers can describe a need in plain language; `POST /api/v1/marketplace/ai-search/parse`
+(buyer-only, `app/api/v1/marketplace/ai-search/parse/route.ts`) calls an
+OpenAI-compatible provider through `server/ai/provider.ts` and validates the
+untrusted model output with `aiSourcingModelOutputSchema`
+(`packages/validation`). The parsed criteria map 1:1 onto the **existing**
+`listMarketplaceQuerySchema` filters (commodity → `productId`, grade →
+`qualityGrade`, region → `location`, max price → `maxPrice`, requested quantity
+→ `minAvailable`), so the client applies them through URL params and the current
+server-rendered search returns the results — no second search path, no second
+results grid. Requested quantity is a search filter ("lots with at least this
+much on hand"), **never** a reservation; MOQ comes from configured business
+parameters (`MIN_ORDER_QUANTITY_KG`), not the model. Env: `AI_PROVIDER` /
+`AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` (see `.env.example`); a missing key
+degrades gracefully (503) without breaking manual search. Redis (when
+configured) provides best-effort rate limiting only.
+
 ---
 
 ## 6. API/DTO gap register

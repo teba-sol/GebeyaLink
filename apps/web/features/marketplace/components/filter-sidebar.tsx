@@ -13,12 +13,15 @@ export type ActiveMarketplaceFilters = {
   grade: GradeFilter | null;
   location: string | null;
   maxPrice: string | null;
+  minAvailable: string | null;
 };
 
 type FormState = ActiveMarketplaceFilters & { query: string };
 
 function countActive(f: ActiveMarketplaceFilters): number {
-  return [f.product, f.grade, f.location ?? '', f.maxPrice ?? ''].filter(Boolean).length;
+  return [f.product, f.grade, f.location ?? '', f.maxPrice ?? '', f.minAvailable ?? ''].filter(
+    Boolean,
+  ).length;
 }
 
 const INPUT =
@@ -78,6 +81,7 @@ function FilterForm({
   onGrade,
   onLocation,
   onMaxPrice,
+  onMinAvailable,
   onApply,
   onClear,
 }: {
@@ -89,6 +93,7 @@ function FilterForm({
   onGrade: (grade: GradeFilter | null) => void;
   onLocation: (value: string) => void;
   onMaxPrice: (value: string) => void;
+  onMinAvailable: (value: string) => void;
   onApply: () => void;
   onClear: () => void;
 }) {
@@ -177,6 +182,21 @@ function FilterForm({
         />
       </div>
 
+      {/* Min available quantity */}
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-semibold text-[#1F2A24]">Min available (kg)</p>
+        <input
+          className={`${INPUT} px-3`}
+          type="number"
+          min="0"
+          step="0.001"
+          value={form.minAvailable ?? ''}
+          onChange={(event) => onMinAvailable(event.target.value)}
+          placeholder="e.g. 5000"
+          aria-label="Minimum available quantity in kilograms"
+        />
+      </div>
+
       {/* Actions */}
       <div className="flex flex-col gap-2 pt-1">
         <button
@@ -221,7 +241,8 @@ export function MarketplaceFilters({
     priorActive.product !== active.product ||
     priorActive.grade !== active.grade ||
     priorActive.location !== active.location ||
-    priorActive.maxPrice !== active.maxPrice
+    priorActive.maxPrice !== active.maxPrice ||
+    priorActive.minAvailable !== active.minAvailable
   ) {
     setPriorActive(active);
     setForm((prev) => ({ ...active, query: prev.query }));
@@ -241,13 +262,20 @@ export function MarketplaceFilters({
   const apply = () => {
     const location = form.location?.trim() || null;
     const maxPrice = form.maxPrice?.trim() || null;
-    navigate({ productId: form.product, qualityGrade: form.grade, location, maxPrice });
+    const minAvailable = form.minAvailable?.trim() || null;
+    navigate({ productId: form.product, qualityGrade: form.grade, location, maxPrice, minAvailable });
     setOpen(false);
   };
 
   const clear = () => {
-    setForm({ product: null, grade: null, location: null, maxPrice: null, query: '' });
-    navigate({ productId: null, qualityGrade: null, location: null, maxPrice: null });
+    setForm({ product: null, grade: null, location: null, maxPrice: null, minAvailable: null, query: '' });
+    navigate({
+      productId: null,
+      qualityGrade: null,
+      location: null,
+      maxPrice: null,
+      minAvailable: null,
+    });
     setOpen(false);
   };
 
@@ -262,6 +290,7 @@ export function MarketplaceFilters({
     onGrade: (value: GradeFilter | null) => setForm((f) => ({ ...f, grade: value })),
     onLocation: (value: string) => setForm((f) => ({ ...f, location: value })),
     onMaxPrice: (value: string) => setForm((f) => ({ ...f, maxPrice: value })),
+    onMinAvailable: (value: string) => setForm((f) => ({ ...f, minAvailable: value })),
     onApply: apply,
     onClear: clear,
   };

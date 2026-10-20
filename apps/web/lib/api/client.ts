@@ -1,4 +1,5 @@
 import type {
+  AiSourcingResult,
   BuyerDto,
   CollectionCenterDto,
   CooperativeDto,
@@ -117,6 +118,12 @@ export const api = {
     return request<PaymentDto>(`/api/v1/payments/${paymentId}/fail`, {
       method: 'POST',
       body: JSON.stringify(input),
+    });
+  },
+  parseAiSourcing(query: string): Promise<AiSourcingResult> {
+    return request<AiSourcingResult>('/api/v1/marketplace/ai-search/parse', {
+      method: 'POST',
+      body: JSON.stringify({ query }),
     });
   },
   createListing(input: CreateListingInput): Promise<MarketplaceListingDto> {
