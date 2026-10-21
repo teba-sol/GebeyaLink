@@ -22,7 +22,7 @@ import { DELIVERY_QUALITY_GRADES } from '@gebeyalink/types';
  *   AI_MODEL       — model id (default `gpt-4o-mini`)
  *   AI_BASE_URL    — base URL (default `https://api.openai.com/v1`)
  *   GEMINI_API_KEY — key for the Gemini provider (absent → graceful 503)
- *   GEMINI_MODEL   — model id (default `gemini-3-flash`, free tier eligible)
+ *   GEMINI_MODEL   — model id (default `gemini-3.5-flash`, free tier eligible)
  *   GEMINI_BASE_URL— API base (default `https://generativelanguage.googleapis.com/v1beta`)
  */
 
@@ -55,13 +55,20 @@ const DEFAULT_MODEL = 'gpt-4o-mini';
 const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 /**
  * Default Gemini model. Free-tier eligible Flash models only (Pro models are
- * paid-only). `gemini-3-flash` is Google's documented production default;
- * `gemini-3.1-flash-lite` is the cheapest with a larger free daily quota, and
- * `gemini-2.5-flash` remains available. Quotas are never hardcoded — configure
- * per project and watch for 429s.
+ * paid-only). `gemini-3.5-flash` is a currently-available production Flash id;
+ * newer ids (e.g. `gemini-3.8-flash`) can be set via `GEMINI_MODEL` when the
+ * project has access, and `gemini-3.1-flash-lite` is the cheapest with a larger
+ * free daily quota. Model availability changes over time — verify with the
+ * models list endpoint before relying on an id. Quotas are never hardcoded.
  */
-const DEFAULT_GEMINI_MODEL = 'gemini-3-flash';
-const REQUEST_TIMEOUT_MS = 20_000;
+const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash';
+/**
+ * Generation can be slow on the Gemini free tier (observed 30-40s under load,
+ * far above the typical <5s), so the request timeout is generous but still
+ * bounded. A slow model degrades to the deterministic fallback for the
+ * explanation, and to the 503 contract for parsing — never a hang.
+ */
+const REQUEST_TIMEOUT_MS = 45_000;
 
 /** System prompt: extract a JSON filter using only real catalog values. */
 export function buildSourcingPrompt(input: SourcingProviderInput): string {
@@ -123,47 +130,72 @@ async function geminiJsonCompletion(params: {
   user: string;
   label: string;
 }): Promise<unknown> {
-  const { signal, clear } = timeoutController();
-  try {
-    const res = await fetch(
-      `${params.baseUrl}/models/${encodeURIComponent(params.model)}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-goog-api-key': params.apiKey,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: params.system }] },
-          contents: [{ role: 'user', parts: [{ text: params.user }] }],
-          generationConfig: {
-            temperature: 0,
-            responseMimeType: 'application/json',
-          },
-        }),
-        signal,
-      },
-    );
-    if (!res.ok) {
-      throw new AiProviderError('request_failed', `Gemini responded ${res.status}`);
-    }
-    const body = (await res.json().catch(() => null)) as
-      | { candidates?: { content?: { parts?: { text?: string }[] } }[] }
-      | null;
-    const text = body?.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
-    if (!text.trim()) {
-      throw new AiProviderError('request_failed', 'Gemini returned no content');
-    }
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: params.system }] },
+    contents: [{ role: 'user', parts: [{ text: params.user }] }],
+    generationConfig: {
+      temperature: 0,
+      responseMimeType: 'application/json',
+    },
+  });
+
+  // The Gemini free tier intermittently returns 503 under load. One short
+  // retry turns most transient failures into success without masking a real
+  // outage (which still surfaces after the retry as the 503 contract).
+  const maxAttempts = 2;
+  let lastStatus = 0;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const { signal, clear } = timeoutController();
     try {
-      return JSON.parse(text);
-    } catch {
-      throw new AiProviderError('request_failed', 'Gemini returned malformed JSON');
+      const res = await fetch(
+        `${params.baseUrl}/models/${encodeURIComponent(params.model)}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-goog-api-key': params.apiKey,
+          },
+          body,
+          signal,
+        },
+      );
+      if (!res.ok) {
+        lastStatus = res.status;
+        const transient = res.status === 503 || res.status === 429 || res.status >= 500;
+        if (transient && attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 1_500 * attempt));
+          continue;
+        }
+        throw new AiProviderError('request_failed', `Gemini responded ${res.status}`);
+      }
+      const raw = (await res.json().catch(() => null)) as
+        | { candidates?: { content?: { parts?: { text?: string }[] } }[] }
+        | null;
+      const text = raw?.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+      if (!text.trim()) {
+        throw new AiProviderError('request_failed', 'Gemini returned no content');
+      }
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new AiProviderError('request_failed', 'Gemini returned malformed JSON');
+      }
+    } catch (error) {
+      const providerError = toProviderError(error, params.label);
+      const transient =
+        providerError.code === 'timeout' ||
+        /responded (429|5\d\d)/.test(providerError.message);
+      if (transient && attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1_500 * attempt));
+        continue;
+      }
+      throw providerError;
+    } finally {
+      clear();
     }
-  } catch (error) {
-    throw toProviderError(error, params.label);
-  } finally {
-    clear();
   }
+
+  throw new AiProviderError('request_failed', `Gemini responded ${lastStatus || 'no response'}`);
 }
 
 function geminiProvider(): SourcingProvider {

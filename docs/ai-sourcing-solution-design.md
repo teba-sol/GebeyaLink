@@ -195,7 +195,8 @@ read the database — it receives only the computed facts serialized in the prom
 - **Gemini** (default): native REST
   `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`
   with `x-goog-api-key` and `generationConfig.responseMimeType: 'application/json'`.
-  Default model `GEMINI_MODEL=gemini-3-flash`.
+  Default model `GEMINI_MODEL=gemini-3.5-flash` (verify ids against the models
+  list endpoint — availability changes over time).
 - **OpenAI-compatible**: any `/chat/completions` endpoint (`AI_BASE_URL`).
 - **mock**: deterministic, offline, no key — used by tests and e2e.
 
@@ -231,7 +232,7 @@ All values are environment-driven except the ranking weights (constants). See
 | Variable | Default | Purpose |
 |---|---|---|
 | `AI_PROVIDER` | `gemini` | Provider selection. |
-| `GEMINI_API_KEY` / `GEMINI_MODEL` / `GEMINI_BASE_URL` | — / `gemini-3-flash` / Google base | Gemini. |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` / `GEMINI_BASE_URL` | — / `gemini-3.5-flash` / Google base | Gemini. |
 | `AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` | — / `gpt-4o-mini` / OpenAI | OpenAI-compatible. |
 | `GEOCODER_PROVIDER` | `open-meteo` | `open-meteo` or `off`. |
 | `GEOCODER_BASE_URL` / `GEOCODER_TIMEOUT_MS` / `GEOCODER_MIN_INTERVAL_MS` | Open-Meteo / 8000 / 1000 | Geocoder. |

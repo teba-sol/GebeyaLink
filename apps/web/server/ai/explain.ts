@@ -97,10 +97,18 @@ function buildExplainPrompt(input: {
     'You are given ONLY facts computed by the platform. Never invent suppliers, prices,',
     'quantities, certifications, delivery dates or reputation, and never change a score.',
     'If information is missing, say it is missing. Do not claim to have contacted anyone.',
-    'Return ONLY JSON with keys: "summary" (string), "highlights" (array of',
-    '{ "recommendationId": string, "points": string[] }), "questionsToAsk" (string[]),',
-    '"risks" (string[]), "evidenceRefs" (array of { "recommendationId": string,',
-    '"evidenceId": string } using only ids present in the input).',
+    'Return ONLY a JSON object with EXACTLY this shape (no extra keys, no prose):',
+    '{',
+    '  "summary": "string",',
+    '  "highlights": [{ "recommendationId": "string", "points": ["string"] }],',
+    '  "questionsToAsk": ["string"],',
+    '  "risks": ["string"],',
+    '  "evidenceRefs": [{ "recommendationId": "string", "evidenceId": "string" }]',
+    '}',
+    '"evidenceRefs" MUST be an array of objects with those two string fields,',
+    'never an array of plain strings. Use ONLY recommendationId/evidenceId values that',
+    'appear in the input; if you cannot cite any, use an empty array. "highlights" and',
+    '"evidenceRefs" may be omitted entirely if not needed.',
   ].join(' ');
 
   const user = JSON.stringify({
