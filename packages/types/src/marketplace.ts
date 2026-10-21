@@ -95,11 +95,34 @@ export type AiSourcingCriteria = {
 export const AI_SOURCING_WARNING_CODES = [
   'unsupported_commodity',
   'invalid_grade',
+  'unsupported_time_window',
+  'unsupported_certification',
+  'below_minimum_order_quantity',
 ] as const;
 export type AiSourcingWarningCode = (typeof AI_SOURCING_WARNING_CODES)[number];
 
 export type AiSourcingWarning = {
   code: AiSourcingWarningCode;
+  message: string;
+};
+
+/**
+ * Clarifications — essential information the request left out or that the
+ * current data model cannot verify. They never block a search; the buyer can
+ * answer them by editing the extracted criteria.
+ */
+export const AI_CLARIFICATION_CODES = [
+  'missing_quantity',
+  'missing_commodity',
+  'ambiguous_price',
+  'unsupported_time_window',
+  'unsupported_certification',
+  'total_budget_without_quantity',
+] as const;
+export type AiClarificationCode = (typeof AI_CLARIFICATION_CODES)[number];
+
+export type AiClarification = {
+  code: AiClarificationCode;
   message: string;
 };
 
@@ -109,6 +132,8 @@ export type AiSourcingResult = {
   /** Platform minimum order quantity in kg (never hardcoded client-side). */
   minOrderQuantityKg: number;
   warnings: AiSourcingWarning[];
+  /** Targeted questions for essential information the request left out. */
+  clarifications: AiClarification[];
 };
 
 export type OrderDto = {

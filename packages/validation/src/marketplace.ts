@@ -107,14 +107,73 @@ export const aiSourcingModelOutputSchema = z.object({
   qualityGrade: z.string().trim().min(1).max(20).nullish(),
   region: z.string().trim().min(1).max(120).nullish(),
   maxPricePerKg: priceQuerySchema.nullish(),
+  /** A total budget the buyer named (not a unit price) — needs a quantity. */
+  totalBudget: priceQuerySchema.nullish(),
   quantityKg: quantityQuerySchema.nullish(),
   quantityValue: quantityQuerySchema.nullish(),
   quantityUnit: z.enum(AI_QUANTITY_UNITS).nullish(),
+  /** Free-text timing request, e.g. "within 14 days" (unsupported by data). */
+  timeWindow: z.string().trim().min(1).max(120).nullish(),
+  /** Requested certifications, e.g. "organic", "fair trade" (unverifiable). */
+  certifications: z.array(z.string().trim().min(1).max(60)).max(10).nullish(),
   notes: z.string().trim().max(500).nullish(),
+});
+
+/**
+ * Recommendation request. `criteria` lets the buyer run a search from
+ * extracted criteria they edited by hand, without re-calling the model.
+ */
+export const sourcingCriteriaSchema = z.object({
+  productId: productIdSchema.optional(),
+  qualityGrade: z.enum(DELIVERY_QUALITY_GRADES).optional(),
+  location: z.string().trim().min(1).max(300).optional(),
+  maxPrice: priceQuerySchema.optional(),
+  minAvailable: quantityQuerySchema.optional(),
+});
+
+export const sourcingRecommendationRequestSchema = z
+  .object({
+    query: z.string().trim().min(3).max(300).optional(),
+    criteria: sourcingCriteriaSchema.optional(),
+  })
+  .refine((value) => Boolean(value.query) || Boolean(value.criteria), {
+    message: 'provide a natural-language query or explicit criteria',
+  });
+
+/**
+ * Gemini's explanation payload — treated as untrusted input and validated
+ * before use. Evidence references are additionally checked against the
+ * server-generated evidence set in `server/ai/explain.ts`.
+ */
+export const aiExplanationModelOutputSchema = z.object({
+  summary: z.string().trim().min(1).max(1200),
+  highlights: z
+    .array(
+      z.object({
+        recommendationId: z.string().trim().min(1).max(64),
+        points: z.array(z.string().trim().min(1).max(300)).min(1).max(5),
+      }),
+    )
+    .max(10)
+    .nullish(),
+  questionsToAsk: z.array(z.string().trim().min(1).max(300)).max(8).nullish(),
+  risks: z.array(z.string().trim().min(1).max(300)).max(8).nullish(),
+  evidenceRefs: z
+    .array(
+      z.object({
+        recommendationId: z.string().trim().min(1).max(64),
+        evidenceId: z.string().trim().min(1).max(64),
+      }),
+    )
+    .max(40)
+    .nullish(),
 });
 
 export type AiSearchInput = z.input<typeof aiSearchQuerySchema>;
 export type AiSourcingModelOutput = z.output<typeof aiSourcingModelOutputSchema>;
+export type SourcingCriteriaInput = z.input<typeof sourcingCriteriaSchema>;
+export type SourcingRecommendationInput = z.output<typeof sourcingRecommendationRequestSchema>;
+export type AiExplanationModelOutput = z.output<typeof aiExplanationModelOutputSchema>;
 
 export type CreateListingInput = z.input<typeof createListingSchema>;
 export type UpdateListingInput = z.input<typeof updateListingSchema>;

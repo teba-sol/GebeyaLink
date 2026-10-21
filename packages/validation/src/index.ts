@@ -9,10 +9,19 @@
 export { productIdSchema, uuidSchema } from './common';
 export {
   AI_QUANTITY_UNITS,
+  aiExplanationModelOutputSchema,
   aiSearchQuerySchema,
   aiSourcingModelOutputSchema,
+  sourcingCriteriaSchema,
+  sourcingRecommendationRequestSchema,
 } from './marketplace';
-export type { AiSearchInput, AiSourcingModelOutput } from './marketplace';
+export type {
+  AiExplanationModelOutput,
+  AiSearchInput,
+  AiSourcingModelOutput,
+  SourcingCriteriaInput,
+  SourcingRecommendationInput,
+} from './marketplace';
 export {
   cooperativeSlugSchema,
   cooperativeStatusSchema,

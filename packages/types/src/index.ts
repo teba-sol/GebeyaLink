@@ -57,6 +57,7 @@ export type {
   ProductDto,
 } from './collection';
 export {
+  AI_CLARIFICATION_CODES,
   AI_SOURCING_WARNING_CODES,
   LISTING_STATUSES,
   ORDER_STATUSES,
@@ -65,6 +66,8 @@ export {
   RESERVATION_STATUSES,
 } from './marketplace';
 export type {
+  AiClarification,
+  AiClarificationCode,
   AiSourcingCriteria,
   AiSourcingResult,
   AiSourcingWarning,
@@ -82,6 +85,37 @@ export type {
   ReservationReleaseReason,
   ReservationStatus,
 } from './marketplace';
+export {
+  AI_EXPLANATION_SOURCES,
+  ELIGIBILITY_FAILURE_CODES,
+  EVIDENCE_KINDS,
+  EVIDENCE_SOURCES,
+  SCORE_COMPONENT_KEYS,
+  SOURCING_ALGORITHM_VERSION,
+  SOURCING_CURRENCIES,
+} from './sourcing';
+export type {
+  AiExplanation,
+  AiExplanationHighlight,
+  AiExplanationReference,
+  AiExplanationSource,
+  AiRecommendationMeta,
+  AiRecommendationResult,
+  EligibilityFailure,
+  EligibilityFailureCode,
+  EligibilityOutcome,
+  EvidenceKind,
+  EvidenceRef,
+  EvidenceSource,
+  RankingScore,
+  ScoreComponent,
+  ScoreComponentKey,
+  ScoreComponentStatus,
+  SourcingCurrency,
+  SplitLine,
+  SplitSourcingOption,
+  SupplierRecommendation,
+} from './sourcing';
 export { PAYMENT_STATUSES } from './payments';
 export type { PaymentDto, PaymentStatus } from './payments';
 export { AUDIT_EVENT_TYPES } from './audit';
