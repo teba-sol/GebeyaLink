@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { positiveNumber } from './env';
+
 /**
  * Platform business parameters (docs/prd.md §15: the minimum order quantity
  * "must not be hardcoded into business logic"; docs/business-domain-model.md
@@ -10,12 +12,6 @@ import 'server-only';
 
 const DEFAULT_MIN_ORDER_QUANTITY_KG = 1000;
 const DEFAULT_RESPONSE_WINDOW_HOURS = 24;
-
-function positiveNumber(value: string | undefined, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-}
 
 /** Platform-wide minimum order quantity in kg. */
 export function minOrderQuantityKg(): number {
