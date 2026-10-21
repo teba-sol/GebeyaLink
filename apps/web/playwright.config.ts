@@ -15,6 +15,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     // Deterministic offline AI provider for the AI sourcing e2e (no live calls).
-    env: { ...process.env, AI_PROVIDER: 'mock' },
+    // The geocoder is disabled so proximity scores are deterministic (unknown).
+    env: { ...process.env, AI_PROVIDER: 'mock', GEOCODER_PROVIDER: 'off' },
   },
 });

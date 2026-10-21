@@ -1,4 +1,5 @@
 import type {
+  AiRecommendationResult,
   AiSourcingResult,
   BuyerDto,
   CollectionCenterDto,
@@ -32,6 +33,7 @@ import type {
   RegisterOrganizationInput,
   RejectOrderInput,
   SubmitPaymentInput,
+  SourcingRecommendationInput,
   UpdateCooperativeInput,
   UpdateCollectionCenterInput,
   UpdateFarmerInput,
@@ -124,6 +126,12 @@ export const api = {
     return request<AiSourcingResult>('/api/v1/marketplace/ai-search/parse', {
       method: 'POST',
       body: JSON.stringify({ query }),
+    });
+  },
+  recommendSuppliers(input: SourcingRecommendationInput): Promise<AiRecommendationResult> {
+    return request<AiRecommendationResult>('/api/v1/marketplace/ai-search/recommendations', {
+      method: 'POST',
+      body: JSON.stringify(input),
     });
   },
   createListing(input: CreateListingInput): Promise<MarketplaceListingDto> {

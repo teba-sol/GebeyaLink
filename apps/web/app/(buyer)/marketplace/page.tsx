@@ -4,6 +4,7 @@ import { listMarketplaceQuerySchema } from '@gebeyalink/validation';
 import type { ProductDto } from '@gebeyalink/types';
 
 import { AiSourcingPanel } from '@/features/marketplace/components/ai-sourcing-panel';
+import { SourcingRecommendations } from '@/features/marketplace/components/sourcing-recommendations';
 import { MarketplaceFilters, type ActiveMarketplaceFilters } from '@/features/marketplace/components/filter-sidebar';
 import { ListingCard } from '@/features/marketplace/components/listing-card';
 import { Pagination } from '@/features/marketplace/components/pagination';
@@ -74,6 +75,8 @@ export default async function MarketplacePage(props: { searchParams: Promise<Rec
           minOrderQuantityKg={minOrderQuantityKg()}
           products={catalog.map((product) => ({ id: product.id, name: product.name }))}
         />
+
+        <SourcingRecommendations />
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[220px_1fr]">
           {/* Sidebar */}

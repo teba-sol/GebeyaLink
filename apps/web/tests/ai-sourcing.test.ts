@@ -111,9 +111,10 @@ describe('parseSourcingQuery (unit)', () => {
     });
     expect(result.criteria.productId).toBeUndefined();
     expect(result.criteria.minAvailable).toBe(200);
-    expect(result.warnings).toEqual([
-      expect.objectContaining({ code: 'unsupported_commodity' }),
-    ]);
+    // 200 kg is below the platform MOQ, so a second, separate warning fires too.
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'unsupported_commodity' })]),
+    );
   });
 
   it('drops an invalid grade and warns', async () => {

@@ -237,8 +237,8 @@ influence API/DTO adjustments before the backend hardens.
 
 Buyers can describe a need in plain language; `POST /api/v1/marketplace/ai-search/parse`
 (buyer-only, `app/api/v1/marketplace/ai-search/parse/route.ts`) calls an
-OpenAI-compatible provider through `server/ai/provider.ts` and validates the
-untrusted model output with `aiSourcingModelOutputSchema`
+OpenAI-compatible or Gemini provider through `server/ai/provider.ts` and
+validates the untrusted model output with `aiSourcingModelOutputSchema`
 (`packages/validation`). The parsed criteria map 1:1 onto the **existing**
 `listMarketplaceQuerySchema` filters (commodity → `productId`, grade →
 `qualityGrade`, region → `location`, max price → `maxPrice`, requested quantity
@@ -247,9 +247,44 @@ server-rendered search returns the results — no second search path, no second
 results grid. Requested quantity is a search filter ("lots with at least this
 much on hand"), **never** a reservation; MOQ comes from configured business
 parameters (`MIN_ORDER_QUANTITY_KG`), not the model. Env: `AI_PROVIDER` /
-`AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` (see `.env.example`); a missing key
-degrades gracefully (503) without breaking manual search. Redis (when
-configured) provides best-effort rate limiting only.
+`AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` (+ `GEMINI_*`, see `.env.example`); a
+missing key degrades gracefully (503) without breaking manual search. Redis
+(when configured) provides best-effort rate limiting only.
+
+### Sourcing recommendations (F1 enhancement)
+
+`POST /api/v1/marketplace/ai-search/recommendations` (buyer-only, sibling route)
+turns a request into *explainable* supplier recommendations over the real,
+buyer-visible inventory. The pipeline is deliberately split so the language
+model never decides anything a buyer could be misled by:
+
+1. **Parse** (optional, LLM) — reuse `server/ai/sourcing.ts`; the `parse` route
+   contract is unchanged.
+2. **Eligibility** (pure code, `server/sourcing/eligibility.ts`) — mirrors the
+   order-time rules in `server/orders/service.ts`: active listing, active
+   cooperative, MOQ, plus product/grade/price-ceiling/quantity. A hard failure
+   can never be outranked.
+3. **Ranking** (pure code, `server/sourcing/ranking.ts`) — transparent weighted
+   score (quantity .30 / price .25 / grade .20 / location .15 / completeness
+   .10; weights are constants so the algorithm is auditable via
+   `meta.algorithmVersion`). Missing data scores 0 *with its weight retained*,
+   so unknown information is never an advantage; ties break deterministically.
+4. **Evidence** (pure code, `server/sourcing/evidence.ts`) — every claim cites
+   the field or calculation that produced it; only buyer-visible fields.
+5. **Split sourcing** (pure code, `server/sourcing/split.ts`) — when no single
+   supplier covers the request, propose a combination of real eligible lots,
+   each at or above MOQ. It is a **proposal only** — it never reserves stock or
+   creates orders.
+6. **Explanation** (LLM, `server/ai/explain.ts`) — the model *explains* the
+   already-computed result. Its output is Zod-validated and every evidence id is
+   checked against the server-generated set (unknown references are dropped). If
+   the provider fails or is unconfigured, a deterministic summary is returned and
+   the request still succeeds (`explanation.source` = `deterministic`).
+
+Proximity is scored from a **second third-party API**: Open-Meteo Geocoding
+(`server/geo/geocoder.ts`, no key, cached + throttled; `GEOCODER_PROVIDER=off`
+disables it). Free-tier licensing is non-commercial — documented in the solution
+design. This route is read-only: it never mutates inventory.
 
 ---
 
